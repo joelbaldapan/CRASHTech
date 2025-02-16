@@ -1,18 +1,28 @@
 const output = document.getElementById("display");
+const highAccuracyCheckbox = document.getElementById("highAccuracyCheckbox");
+const timeoutInput = document.getElementById("timeoutInput");
+const applySettingsButton = document.getElementById("applySettings");
+
 let reqcount = 0;
+let watchID = null;
 
-const options = {
-    enableHighAccuracy: true,  // Request highest accuracy
-    timeout: 1000,             // Lower timeout for faster requests
-    maximumAge: 0              // No cached positions
-};
+function startTracking() {
+    if (watchID) {
+        navigator.geolocation.clearWatch(watchID); // Clear existing watcher
+    }
 
-// Function to continuously watch position updates
-navigator.geolocation.watchPosition(successCallback, errorCallback, options);
+    const options = {
+        enableHighAccuracy: highAccuracyCheckbox.checked,
+        timeout: parseInt(timeoutInput.value),
+        maximumAge: 0
+    };
+
+    watchID = navigator.geolocation.watchPosition(successCallback, errorCallback, options);
+}
+
 // setInterval(() => {
 //     navigator.geolocation.getCurrentPosition(successCallback, errorCallback, options);
 // }, 1000);  // Requests every second
-
 
 function successCallback(position) {
     reqcount++;
@@ -20,7 +30,7 @@ function successCallback(position) {
 
     output.innerHTML = 
         "ReqCount: " + reqcount + "<br>" +
-        "Accuracy: " + accuracy + "%<br>" +
+        "Accuracy: " + accuracy + " meters<br>" +
         "Latitude: " + latitude + "<br>" +
         "Longitude: " + longitude + "<br>" +
         "Altitude: " + (altitude !== null ? altitude + " meters" : "Not available") + "<br>" +
@@ -31,3 +41,9 @@ function successCallback(position) {
 function errorCallback(error) {
     console.error("Geolocation error:", error.message);
 }
+
+// Apply settings when the button is clicked
+applySettingsButton.addEventListener("click", startTracking);
+
+// Start tracking with default settings
+startTracking();
