@@ -1,6 +1,6 @@
 let prevTimestamp = null;
 let prevCoords = null;
-let watchId = null;
+let watchId = null; // Stores the tracking ID
 
 const startBtn = document.getElementById("startBtn");
 const stopBtn = document.getElementById("stopBtn");
@@ -16,6 +16,8 @@ function toKmH(metersPerSecond) {
 }
 
 function updateSpeed(position) {
+    if (!watchId) return; // Stops updating if tracking is stopped
+
     const currentTime = new Date().toLocaleTimeString();
     let speed = position.coords.speed;
     let estimated = false;
@@ -69,7 +71,11 @@ function handleError(error) {
 
 // ✅ Start button - Clears log and starts tracking
 startBtn.addEventListener("click", () => {
+    if (watchId) return; // Prevents multiple watchers
+
     speedLog.innerHTML = ""; // ✅ Clears previous log
+    display.textContent = "Starting tracking...";
+
     if ("geolocation" in navigator) {
         watchId = navigator.geolocation.watchPosition(updateSpeed, handleError, {
             enableHighAccuracy: ACCURACY,
@@ -85,7 +91,7 @@ startBtn.addEventListener("click", () => {
 stopBtn.addEventListener("click", () => {
     if (watchId !== null) {
         navigator.geolocation.clearWatch(watchId);
-        watchId = null;
+        watchId = null; // ✅ Stops tracking updates
         display.textContent = "Tracking stopped.";
     }
 });
