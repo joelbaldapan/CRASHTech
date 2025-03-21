@@ -1,11 +1,13 @@
 let prevTimestamp = null;
 let prevCoords = null;
-let watchId = null; // Stores the tracking ID
+let watchId = null;
 
 const startBtn = document.getElementById("startBtn");
 const stopBtn = document.getElementById("stopBtn");
 const display = document.getElementById("display");
 const speedLog = document.getElementById("speedLog");
+const speedLimitInput = document.getElementById("speedLimit");
+const speedAlert = document.getElementById("speedAlert");
 
 const ACCURACY = true;
 const MAXIMUM_AGE = 1000;
@@ -16,7 +18,7 @@ function toKmH(metersPerSecond) {
 }
 
 function updateSpeed(position) {
-    if (!watchId) return; // Stops updating if tracking is stopped
+    if (!watchId) return;
 
     const currentTime = new Date().toLocaleTimeString();
     let speed = position.coords.speed;
@@ -35,8 +37,14 @@ function updateSpeed(position) {
     }
 
     if (speed !== null) {
-        const speedKmH = toKmH(speed);
+        const speedKmH = parseFloat(toKmH(speed));
         display.textContent = `Speed: ${speedKmH} km/h ${estimated ? "(estimated)" : ""}`;
+
+        // ✅ Check speed limit
+        const speedLimit = parseFloat(speedLimitInput.value);
+        if (speedKmH > speedLimit) {
+            speedAlert.play(); // 🚨 Play alert sound
+        }
 
         // ✅ Append speed log
         const listItem = document.createElement("li");
@@ -71,9 +79,9 @@ function handleError(error) {
 
 // ✅ Start button - Clears log and starts tracking
 startBtn.addEventListener("click", () => {
-    if (watchId) return; // Prevents multiple watchers
+    if (watchId) return;
 
-    speedLog.innerHTML = ""; // ✅ Clears previous log
+    speedLog.innerHTML = "";
     display.textContent = "Starting tracking...";
 
     if ("geolocation" in navigator) {
@@ -91,7 +99,7 @@ startBtn.addEventListener("click", () => {
 stopBtn.addEventListener("click", () => {
     if (watchId !== null) {
         navigator.geolocation.clearWatch(watchId);
-        watchId = null; // ✅ Stops tracking updates
+        watchId = null;
         display.textContent = "Tracking stopped.";
     }
 });

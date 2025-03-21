@@ -3,18 +3,35 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Speed Detector</title>
+    <meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests">
+    
     <link rel="stylesheet" href="style.css">
+    <link rel="image_src" href="images/icons/thumbnail.png">
+    <link rel="icon" href="images/icons/icon.png">
+    
+    <script type="module" src="main.js" defer></script>
+    <title>Speed Detector</title>
 </head>
 <body>
-    <h1>Speed Detector</h1>
+    <h1>[PROTOTYE] SPEED DETECTOR</h1>
 
+    <!-- Speed Display -->
+    <p id="display">Speed: 0 km/h</p>
+
+    <!-- Speed Limit Input -->
+    <label for="speedLimit">Speed Limit (km/h): </label>
+    <input type="number" id="speedLimit" value="50" min="1">
+
+    <!-- Start & Stop Buttons -->
     <button id="startBtn">Start</button>
     <button id="stopBtn">Stop</button>
 
-    <p id="display">Speed: -- km/h</p>
+    <!-- Speed Log -->
+    <h2>Speed Log</h2>
     <ul id="speedLog"></ul>
 
-    <script src="main.js" defer></script>
+    <!-- Audio for Speed Alert -->
+    <audio id="speedAlert" src="Speed Alert.mp3"></audio>
+
 </body>
 </html>
