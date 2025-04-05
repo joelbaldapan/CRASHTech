@@ -414,7 +414,7 @@ function saveSettings() {
     const maxSpeed = maxSpeedAfterCrashInput.value; const minDecel = minDecelerationForCrashInput.value;
     const backendUrl = backendApiUrlInput.value.trim(); // Use new ID
 
-    if (!userName || !phoneNumbersRaw || !speedLimit || !minSpeed || !maxSpeed || !minDecel || !backendUrl
+    if (!userName || !phoneNumbersRaw || !speedLimit || !minSpeed || !maxSpeed || !minDecel || !backendUrl) {
         settingsStatus.textContent = "Please fill in ALL setting fields, including Backend API URL.";
         settingsStatus.style.color = "red"; setTimeout(() => { settingsStatus.textContent = ""; }, 3000); return;
     }
