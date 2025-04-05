@@ -14,8 +14,9 @@ const maxSpeedAfterCrashInput = document.getElementById("maxSpeedAfterCrash");
 const minDecelerationForCrashInput = document.getElementById("minDecelerationForCrash");
 const saveSettingsBtn = document.getElementById("saveSettingsBtn");
 const settingsStatus = document.getElementById("settingsStatus");
-const twilioFunctionUrlInput = document.getElementById("twilioFunctionUrl");
-const apiPasscodeInput = document.getElementById("apiPasscode");
+// *** Uses ID expected from HTML update for generic backend ***
+const backendApiUrlInput = document.getElementById("backendApiUrl"); // UPDATED ID reference
+const apiPasscodeInput = document.getElementById("apiPasscode");     // Kept ID
 
 // Crash Alert elements
 const crashAlertInfo = document.getElementById("crashAlertInfo");
@@ -67,19 +68,21 @@ function startMonitoring() {
 
     // Basic Checks
     if (!("geolocation" in navigator)) { /* ... */ return; }
-    const functionUrl = twilioFunctionUrlInput.value.trim();
-    const apiPasscode = apiPasscodeInput.value.trim(); // Get passcode trim only, might be sensitive to spaces?
-    if (!userNameInput.value || !phoneNumbersInput.value || !speedLimitInput.value || !minSpeedForCrashCheckInput.value || !maxSpeedAfterCrashInput.value || !minDecelerationForCrashInput.value || !functionUrl || !apiPasscode) {
-        monitoringStatus.textContent = "Error: Please fill in ALL settings fields, including Twilio URL and Passcode.";
+    // *** Use updated variable name for backend URL ***
+    const backendUrl = backendApiUrlInput.value.trim();
+    const apiPasscode = apiPasscodeInput.value.trim();
+    // *** Update error message text ***
+    if (!userNameInput.value || !phoneNumbersInput.value || !speedLimitInput.value || !minSpeedForCrashCheckInput.value || !maxSpeedAfterCrashInput.value || !minDecelerationForCrashInput.value || !backendUrl || !apiPasscode) {
+        monitoringStatus.textContent = "Error: Please fill in ALL settings fields, including Backend API URL and Passcode."; // Generic wording
         settingsStatus.textContent = "Save ALL settings before starting.";
         settingsStatus.style.color = "red";
         return;
     }
     try {
-       new URL(functionUrl);
+       new URL(backendUrl); // Check format using backendUrl
     } catch (_) {
-       monitoringStatus.textContent = "Error: Invalid Twilio Function URL format.";
-       settingsStatus.textContent = "Check Twilio Function URL.";
+       monitoringStatus.textContent = "Error: Invalid Backend API URL format."; // Generic wording
+       settingsStatus.textContent = "Check Backend API URL.";
        settingsStatus.style.color = "red";
        return;
     }
@@ -91,7 +94,7 @@ function startMonitoring() {
     isSpeeding = false;
     display.style.color = '';
     crashAlertInfo.style.display = 'none';
-    previousSpeedKmH = 0; // Reset previous speed state for log difference calculation
+    previousSpeedKmH = 0;
     if (speedLog) speedLog.innerHTML = "";
 
     // Start Geolocation Watch
@@ -148,7 +151,6 @@ function handlePositionUpdate(position) {
         const currentTime = new Date(timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
 
         let differenceText = "";
-        // Show difference only if the previous reading was valid (not initial 0) AND current reading is valid
         if (previousSpeedKmH !== 0 && currentSpeedMPS !== null) {
              const speedDifference = currentSpeedKmH - previousSpeedKmH;
              differenceText = ` (${speedDifference >= 0 ? '+' : ''}${speedDifference.toFixed(1)} km/h)`;
@@ -233,17 +235,17 @@ function triggerCrashAlert() {
 
     crashAlertInfo.style.display = 'block';
     crashLocationDisplay.textContent = "Fetching location for alert...";
-    smsLink.style.display = 'none'; // Hide manual link
+    smsLink.style.display = 'none';
 
     navigator.geolocation.getCurrentPosition(
         (position) => {
             const { latitude, longitude } = position.coords;
-            callTwilioFunctionForSms(latitude, longitude); // Call the function that calls the API
+            callBackendForSms(latitude, longitude); // Use renamed function
         },
         (error) => {
             crashLocationDisplay.textContent = `Location: Error fetching location (${error.message})`;
             console.error("Geolocation error on crash:", error);
-            callTwilioFunctionForSms(null, null); // Call API even if location failed
+            callBackendForSms(null, null); // Use renamed function
         },
         { enableHighAccuracy: true, timeout: LOCATION_TIMEOUT, maximumAge: 0 }
     );
@@ -251,107 +253,113 @@ function triggerCrashAlert() {
 
 
 /**
- * Calls the Twilio Function endpoint (URL read from input) to send SMS.
+ * *** RENAMED & UPDATED FOR GENERIC BACKEND ***
+ * Calls the configured Backend API endpoint (URL read from input) to trigger SMS sending.
+ * Assumes backend handles interaction with specific SMS provider (e.g., PhilSMS).
  * @param {number|null} latitude
  * @param {number|null} longitude
  */
-function callTwilioFunctionForSms(latitude, longitude) {
+function callBackendForSms(latitude, longitude) { // Renamed function
     // --- Read configuration from input fields ---
-    const functionUrl = twilioFunctionUrlInput.value.trim();
-    const apiPasscode = apiPasscodeInput.value.trim(); // Read passcode trim only
+    // *** Use updated variable name for backend URL ***
+    const backendUrl = backendApiUrlInput.value.trim();
+    const apiPasscode = apiPasscodeInput.value.trim();
 
     // --- Validate configuration before proceeding ---
-    if (!functionUrl || !apiPasscode) {
-        console.error("Error: Twilio Function URL or API Passcode is missing in settings.");
-        monitoringStatus.textContent = "Status: CRASH DETECTED! FAILED (Missing URL/Passcode in settings).";
-        crashLocationDisplay.textContent += "\nError: Cannot send alert. Twilio URL or Passcode missing in settings.";
-        return; // Stop if config is missing
+    // *** Update error message text ***
+    if (!backendUrl || !apiPasscode) { // REMOVED passcode check logic from user request
+        console.error("Error: Backend API URL is missing in settings."); // Adjusted error
+        monitoringStatus.textContent = "Status: CRASH DETECTED! FAILED (Missing Backend URL in settings)."; // Adjusted error
+        crashLocationDisplay.textContent += "\nError: Cannot send alert. Backend API URL missing in settings."; // Adjusted error
+        return;
     }
-    try { new URL(functionUrl); } catch (_) {
+    try { new URL(backendUrl); } catch (_) {
        monitoringStatus.textContent = "Status: CRASH DETECTED! FAILED (Invalid URL format in settings).";
-       crashLocationDisplay.textContent += "\nError: Cannot send alert. Invalid Twilio Function URL format in settings.";
+       crashLocationDisplay.textContent += "\nError: Cannot send alert. Invalid Backend API URL format in settings.";
        return;
     }
 
     // --- Proceed with preparing data ---
     const userName = userNameInput.value.trim() || "User";
-    const phoneNumbers = getCleanedPhoneNumbers();
+    const phoneNumbers = getCleanedPhoneNumbers(); // Get ARRAY
 
     if (phoneNumbers.length === 0) {
         crashLocationDisplay.textContent = (latitude !== null ? `Location: Lat: ${latitude.toFixed(5)}, Lon: ${longitude.toFixed(5)}` : 'Location: Unknown') +
                                            "\nError: No emergency contacts saved to notify.";
         monitoringStatus.textContent = "Status: CRASH DETECTED! No contacts to alert.";
-        console.error("Cannot send SMS via Twilio Function: No valid phone numbers saved.");
+        console.error("Cannot send SMS via Backend: No valid phone numbers saved.");
         return;
     }
 
-    // Update location display
     let locationText = "an unknown location (location services failed or denied)";
     if (latitude !== null && longitude !== null) {
         locationText = `location Lat: ${latitude.toFixed(5)}, Lon: ${longitude.toFixed(5)}`;
-        const googleMapsLink = `https://www.google.com/maps?q=${latitude},${longitude}`; // Use standard Google Maps link
+        const googleMapsLink = `https://www.google.com/maps?q=${latitude},${longitude}`;
         crashLocationDisplay.innerHTML = `Location: ${locationText} (<a href="${googleMapsLink}" target="_blank" rel="noopener noreferrer">View Map</a>)`;
     } else {
-         crashLocationDisplay.textContent = `Location: Unknown`;
+        crashLocationDisplay.textContent = `Location: Unknown`;
     }
 
-    // Construct message body
     const now = new Date();
     const dateOptions = { timeZone: 'Asia/Manila', year: 'numeric', month: 'long', day: 'numeric' };
     const timeOptions = { timeZone: 'Asia/Manila', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true };
     const currentDateTime = `${now.toLocaleDateString('en-US', dateOptions)} at ${now.toLocaleTimeString('en-US', timeOptions)} (Philippine Time)`;
     const messageBody = `Automatic Crash Detection Alert from ${userName}'s phone. Potential crash detected near ${currentDateTime} at ${locationText}. Please contact emergency services or check on them immediately.`;
 
-    // --- Call Twilio Function ---
-    console.log(`Sending data to Twilio Function: ${functionUrl}`);
-    // Check if this call originated from crash detection or test button - affects status message slightly
-    // For simplicity, keep the "CRASH DETECTED" status updates, test button caller knows it's a test.
-    monitoringStatus.textContent = "Status: CRASH DETECTED! Sending alert via Twilio...";
+    // --- Call Backend API ---
+    // *** Update console log and status message text ***
+    console.log(`Sending data to Backend API: ${backendUrl}`);
+    monitoringStatus.textContent = "Status: CRASH DETECTED! Sending alert via server..."; // Generic message
 
+    // *** Payload sends recipients as an ARRAY, REMOVED passcode ***
     const payload = {
-        recipients: phoneNumbers.join(','), // Send as comma-separated STRING
-        message: messageBody,
-        passcode: apiPasscode               // Send the passcode read from input
+        recipients: phoneNumbers, // Send ARRAY
+        message: messageBody
+        // passcode: apiPasscode // REMOVED as per user request
     };
 
-    fetch(functionUrl, { // Use URL from input
+    fetch(backendUrl, { // Use generic backend URL
         method: 'POST',
         headers: { 'Content-Type': 'application/json', },
         body: JSON.stringify(payload),
     })
     .then(response => {
+        // Handle backend response
         if (!response.ok) {
-            return response.text().then(text => {
-                if (response.status === 401 || (text && text.toLowerCase().includes('invalid passcode'))) {
-                     throw new Error(`Authentication failed: Invalid Passcode provided.`);
-                }
-                throw new Error(`Twilio Function error ${response.status}: ${text || response.statusText}`);
+            // REMOVED specific passcode check from error handling
+            return response.json().then(errData => { // Assume JSON error
+                 throw new Error(`Backend error ${response.status}: ${errData.error || errData.message || 'Unknown error'}`);
+            }).catch(() => { // Fallback if error body isn't JSON
+                throw new Error(`Backend responded with status ${response.status}: ${response.statusText}`);
             });
         }
-        return response.json();
+        return response.json(); // Parse success response
     })
     .then(data => {
-        console.log('Twilio Function response:', data);
-        let successes = 0;
-        let failures = 0;
+        // Process success data (Adapt based on your actual backend response structure)
+        console.log('Backend API response:', data);
+        let successes = 0; let failures = 0;
+        // Example: Assuming backend returns { result: [...] }
         if (data && Array.isArray(data.result)) {
             data.result.forEach(item => {
                 if (item.success) successes++;
-                else {
-                    failures++;
-                    console.error(`Failed SMS to ${item.number}: ${item.error}`);
-                }
+                else { failures++; console.error(`Failed SMS to ${item.number || 'unknown'}: ${item.error || 'Unknown error'}`); }
             });
-            // Modify status slightly based on context if needed, or keep general
-            monitoringStatus.textContent = `Status: Alert via Twilio complete (${successes} sent, ${failures} failed).`; // More generic status
-            crashLocationDisplay.textContent += `\nTwilio confirmation: Attempted ${successes + failures} messages. ${successes} success, ${failures} failed.`;
-        } else {
-             throw new Error('Received unexpected response format from Twilio Function.');
+            monitoringStatus.textContent = `Status: Alert via Server complete (${successes} sent, ${failures} failed).`;
+            crashLocationDisplay.textContent += `\nServer confirmation: Attempted ${successes + failures} messages. ${successes} success, ${failures} failed.`;
         }
+        // Example: Handling simpler success like { success: true, message: "..." }
+        else if (data && data.success) {
+             monitoringStatus.textContent = `Status: Alert via Server complete.`;
+             crashLocationDisplay.textContent += `\nServer confirmation: ${data.message || 'Alert request processed.'}`;
+        }
+         else { throw new Error('Received unexpected response format from Backend API.'); }
     })
     .catch(error => {
-        console.error('Error calling Twilio Function:', error);
-        monitoringStatus.textContent = "Status: FAILED to send alert via Twilio."; // Generic failure status
+        // Handle fetch/network errors
+        console.error('Error calling Backend API:', error);
+        // *** Update error message text ***
+        monitoringStatus.textContent = "Status: FAILED to send alert via server.";
         monitoringStatus.style.color = "red";
         crashLocationDisplay.textContent += `\nError: Could not send automatic alert (${error.message}). Notify contacts manually if possible.`;
     });
@@ -361,7 +369,6 @@ function callTwilioFunctionForSms(latitude, longitude) {
 function resetCrashAlert() {
     crashDetected = false;
     crashAlertInfo.style.display = 'none';
-    // Reset status properly based on whether monitoring is still active
     monitoringStatus.textContent = isMonitoring ? "Status: Monitoring speed..." : "Status: Idle";
     monitoringStatus.style.color = "";
     display.style.color = '';
@@ -378,66 +385,54 @@ function resetCrashAlert() {
 
 // --- Settings Persistence ---
 function saveSettings() {
-    const userName = userNameInput.value.trim();
-    const phoneNumbersRaw = phoneNumbersInput.value.trim();
-    const speedLimit = speedLimitInput.value;
-    const minSpeed = minSpeedForCrashCheckInput.value;
-    const maxSpeed = maxSpeedAfterCrashInput.value;
-    const minDecel = minDecelerationForCrashInput.value;
-    const functionUrl = twilioFunctionUrlInput.value.trim();
-    const apiPasscode = apiPasscodeInput.value.trim();
+    // *** Update to remove passcode handling ***
+    const userName = userNameInput.value.trim(); const phoneNumbersRaw = phoneNumbersInput.value.trim();
+    const speedLimit = speedLimitInput.value; const minSpeed = minSpeedForCrashCheckInput.value;
+    const maxSpeed = maxSpeedAfterCrashInput.value; const minDecel = minDecelerationForCrashInput.value;
+    const backendUrl = backendApiUrlInput.value.trim(); // Use new ID
+    // REMOVED: const apiPasscode = apiPasscodeInput.value.trim();
 
-    if (!userName || !phoneNumbersRaw || !speedLimit || !minSpeed || !maxSpeed || !minDecel || !functionUrl || !apiPasscode) {
-        settingsStatus.textContent = "Please fill in ALL setting fields.";
-        settingsStatus.style.color = "red";
-        setTimeout(() => { settingsStatus.textContent = ""; }, 3000);
-        return;
+    // Update validation message
+    if (!userName || !phoneNumbersRaw || !speedLimit || !minSpeed || !maxSpeed || !minDecel || !backendUrl /* REMOVED || !apiPasscode */) {
+        settingsStatus.textContent = "Please fill in ALL setting fields, including Backend API URL."; // Adjusted message
+        settingsStatus.style.color = "red"; setTimeout(() => { settingsStatus.textContent = ""; }, 3000); return;
     }
     const phoneNumbersClean = getCleanedPhoneNumbers(phoneNumbersRaw);
-     if (phoneNumbersClean.length === 0) {
-        settingsStatus.textContent = "No valid PH phone numbers entered.";
-        settingsStatus.style.color = "red";
-        setTimeout(() => { settingsStatus.textContent = ""; }, 3000);
-        return;
-    }
-     try { new URL(functionUrl); } catch (_) {
-        settingsStatus.textContent = "Invalid Twilio Function URL format.";
-        settingsStatus.style.color = "red";
-        setTimeout(() => { settingsStatus.textContent = ""; }, 3000);
-         return;
-     }
+    if (phoneNumbersClean.length === 0) { settingsStatus.textContent = "No valid PH phone numbers entered."; settingsStatus.style.color = "red"; setTimeout(() => { settingsStatus.textContent = ""; }, 3000); return; }
+    try { new URL(backendUrl); } catch (_) { settingsStatus.textContent = "Invalid Backend API URL format."; settingsStatus.style.color = "red"; setTimeout(() => { settingsStatus.textContent = ""; }, 3000); return; }
 
+    // Update localStorage saving
     localStorage.setItem(STORAGE_PREFIX + 'userName', userName);
     localStorage.setItem(STORAGE_PREFIX + 'phoneNumbers', phoneNumbersRaw);
     localStorage.setItem(STORAGE_PREFIX + 'speedLimit', speedLimit);
     localStorage.setItem(STORAGE_PREFIX + 'minSpeed', minSpeed);
     localStorage.setItem(STORAGE_PREFIX + 'maxSpeed', maxSpeed);
     localStorage.setItem(STORAGE_PREFIX + 'minDecel', minDecel);
-    localStorage.setItem(STORAGE_PREFIX + 'functionUrl', functionUrl);
-    localStorage.setItem(STORAGE_PREFIX + 'apiPasscode', apiPasscode);
+    localStorage.setItem(STORAGE_PREFIX + 'backendUrl', backendUrl); // Use new key
+    // REMOVED: localStorage.setItem(STORAGE_PREFIX + 'apiPasscode', apiPasscode);
 
-    settingsStatus.textContent = "Settings saved successfully!";
-    settingsStatus.style.color = "green";
-    console.log("Settings saved (including Twilio config).");
+    settingsStatus.textContent = "Settings saved successfully!"; settingsStatus.style.color = "green";
+    console.log("Settings saved (including Backend API config)."); // Generic log
     setTimeout(() => { settingsStatus.textContent = ""; }, 3000);
 }
 
 function loadSettings() {
+    // *** Update to remove passcode loading ***
     userNameInput.value = localStorage.getItem(STORAGE_PREFIX + 'userName') || '';
     phoneNumbersInput.value = localStorage.getItem(STORAGE_PREFIX + 'phoneNumbers') || '';
     speedLimitInput.value = localStorage.getItem(STORAGE_PREFIX + 'speedLimit') || '60';
     minSpeedForCrashCheckInput.value = localStorage.getItem(STORAGE_PREFIX + 'minSpeed') || '30';
     maxSpeedAfterCrashInput.value = localStorage.getItem(STORAGE_PREFIX + 'maxSpeed') || '5';
     minDecelerationForCrashInput.value = localStorage.getItem(STORAGE_PREFIX + 'minDecel') || '25';
-    twilioFunctionUrlInput.value = localStorage.getItem(STORAGE_PREFIX + 'functionUrl') || '';
-    apiPasscodeInput.value = localStorage.getItem(STORAGE_PREFIX + 'apiPasscode') || '';
+    backendApiUrlInput.value = localStorage.getItem(STORAGE_PREFIX + 'backendUrl') || ''; // Use new key/ID
+    // REMOVED: apiPasscodeInput.value = localStorage.getItem(STORAGE_PREFIX + 'apiPasscode') || '';
 
     console.log("Settings loaded.");
 }
 
 // --- Utility Functions ---
 function getCleanedPhoneNumbers(rawString = null) {
-     const inputString = rawString === null ? phoneNumbersInput.value : rawString;
+    const inputString = rawString === null ? phoneNumbersInput.value : rawString;
     const phRegex = /^(09\d{9}|\+639\d{9})$/;
     return inputString
         .split(',')
@@ -445,57 +440,45 @@ function getCleanedPhoneNumbers(rawString = null) {
         .filter(num => phRegex.test(num));
 }
 
-// --- ADDED: Function to handle Test Button Click ---
+// --- Function to handle Test Button Click ---
 /**
  * Handles the click event for the Test SMS button.
  * Attempts to get current location and then calls the SMS sending function.
  */
 function handleTestSmsClick() {
+    // *** Update validation message to remove passcode ***
     console.log("Test SMS button clicked.");
     monitoringStatus.textContent = "Status: Initiating TEST SMS send...";
-    monitoringStatus.style.color = "blue"; // Indicate test in status temporarily
+    monitoringStatus.style.color = "blue";
 
-    // Check if required settings for sending are present before proceeding
-    const functionUrl = twilioFunctionUrlInput.value.trim();
-    const apiPasscode = apiPasscodeInput.value.trim(); // Use trimmed value
-    const phoneNumbers = getCleanedPhoneNumbers(); // Check recipients too
+    const backendUrl = backendApiUrlInput.value.trim(); // Use new ID
+    // REMOVED: const apiPasscode = apiPasscodeInput.value.trim();
+    const phoneNumbers = getCleanedPhoneNumbers();
 
-    if (!functionUrl || !apiPasscode || !userNameInput.value || phoneNumbers.length === 0) {
-         monitoringStatus.textContent = "Status: TEST FAILED (Missing required settings - URL, Passcode, Name, or Recipients).";
+    // Update validation message
+    if (!backendUrl /* REMOVED || !apiPasscode */ || !userNameInput.value || phoneNumbers.length === 0) {
+         monitoringStatus.textContent = "Status: TEST FAILED (Missing required settings - URL, Name, or Recipients)."; // Adjusted message
          monitoringStatus.style.color = "red";
-         // Use alert for more prominent feedback on failure cause
-         alert("Please ensure User Name, Recipients, Twilio Function URL, and API Passcode are set and saved before testing.");
-         // Optionally reset status after delay
-         // setTimeout(() => { monitoringStatus.textContent = isMonitoring ? "Status: Monitoring speed..." : "Status: Idle"; monitoringStatus.style.color = ""; }, 3000);
+         alert("Please ensure User Name, Recipients, and Backend API URL are set and saved before testing."); // Adjusted alert
          return;
     }
 
-    // Show the alert info box temporarily for feedback during the test
-    // It will display location and server response info.
     crashAlertInfo.style.display = 'block';
     crashLocationDisplay.textContent = "Fetching location for TEST...";
-    smsLink.style.display = 'none'; // Ensure manual link stays hidden if it exists
+    smsLink.style.display = 'none';
 
-    // Get current location for the test message
     navigator.geolocation.getCurrentPosition(
         (position) => {
             const { latitude, longitude } = position.coords;
             console.log(`Location fetched for test: Lat ${latitude}, Lon ${longitude}`);
-            // Call the main SMS function with fetched coordinates
-            callTwilioFunctionForSms(latitude, longitude);
+            callBackendForSms(latitude, longitude); // Call generic backend function
         },
         (error) => {
-            // Failed to get location - proceed with null coordinates
             crashLocationDisplay.textContent = `Location: Error fetching location for test (${error.message})`;
             console.error("Geolocation error during test:", error);
             alert(`Could not get location for test (${error.message}). Proceeding without coordinates.`);
-            // Call the main SMS function with null coordinates
-            callTwilioFunctionForSms(null, null);
+            callBackendForSms(null, null); // Call generic backend function
         },
-        { // Options for test location request
-            enableHighAccuracy: true, // Try for accuracy
-            timeout: LOCATION_TIMEOUT, // Use same timeout
-            maximumAge: 0 // Force fresh reading
-        }
+        { enableHighAccuracy: true, timeout: LOCATION_TIMEOUT, maximumAge: 0 }
     );
 }
