@@ -10,8 +10,8 @@
     <title>Speed & Crash Detector Prototype</title>
 </head>
 <body>
-    <h1>[PROTOTYE] SPEED & CRASH DETECTOR (using PhilSMS Backend)</h1>
-    <h2>Note: Uses GPS speed for detection. SMS sending uses a backend API. GPS accuracy may vary.</h2>
+    <h1>[PROTOTYE] SPEED & CRASH DETECTOR (using PhilSMS Backend - though, work in progress pa.) by Joel, hi guys</h1>
+    <h2>Note: Uses GPS speed for detection. SMS sending uses a backend API. GPS accuracy and timing may vary.</h2>
 
     <div class="settings">
         <h2>Settings</h2>
@@ -25,7 +25,7 @@
 
         <label for="speedLimit">Speed Limit Alert (km/h):</label>
         <input type="number" id="speedLimit" value="60" min="1" step="5"><br>
-        <small>Plays sound when speed exceeds this limit.</small><br>
+        <small>Plays SYNNOVE WARNING!! when speed exceeds this limit.</small><br>
 
         <hr class="thin-hr">
 
@@ -45,7 +45,7 @@
 
         <label for="backendApiUrl">Backend API URL:</label>
         <input type="url" id="backendApiUrl" placeholder="https://your-backend-service-url/api/send-sms"><br>
-        <small>The public URL of the backend. (WORK IN PROGRESS -joel)</small><br>
+        <small>The public URL of the backend. (wowww `backend`, hackerman ahh) (WORK IN PROGRESS -joel)</small><br>
         <button id="saveSettingsBtn">Save Settings</button>
         <p id="settingsStatus"></p>
     </div>

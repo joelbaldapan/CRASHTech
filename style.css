@@ -1,8 +1,8 @@
 /* Basic Reset & Body */
 body {
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+    font-family: 'Space Mono', monospace; /* Changed font */
     padding: 15px;
-    background-color: #f4f7f6; /* Slightly softer background */
+    background-color: #f4f7f6;
     line-height: 1.6;
     color: #333;
     margin: 0; /* Ensure no default margin */
@@ -11,7 +11,7 @@ body {
 
 /* Headings */
 h1, h2 {
-    color: #2c3e50; /* Darker blue-grey */
+    color: #2c3e50;
     margin-bottom: 0.8em;
 }
 h1 {
@@ -29,11 +29,11 @@ h2 {
 /* Container Blocks */
 .settings, .controls, .log-container, #crashAlertInfo {
     background-color: #ffffff;
-    padding: 15px 20px; /* Adjust padding */
+    padding: 15px 20px;
     margin-bottom: 20px;
-    border-radius: 8px; /* Slightly more rounded corners */
-    box-shadow: 0 3px 6px rgba(0,0,0,0.08); /* Soft shadow */
-    border: 1px solid #e0e0e0; /* Subtle border */
+    border-radius: 8px;
+    box-shadow: 0 3px 6px rgba(0,0,0,0.08);
+    border: 1px solid #e0e0e0;
 }
 
 /* Form Elements */
@@ -41,7 +41,7 @@ label {
     display: block;
     margin-bottom: 5px;
     margin-top: 12px;
-    font-weight: 600; /* Slightly bolder labels */
+    font-weight: 600;
     font-size: 0.95em;
     color: #555;
 }
@@ -53,14 +53,14 @@ input[type="url"],      /* Added */
 input[type="password"]  /* Added */
 {
     width: 100%; /* Full width */
-    padding: 10px 12px; /* Comfortable padding */
-    margin-bottom: 5px; /* Reduced margin below input */
+    padding: 10px 12px;
+    margin-bottom: 5px;
     border: 1px solid #ccc;
     border-radius: 5px;
     box-sizing: border-box; /* Include padding/border in width */
-    font-size: 1em; /* Keep font size consistent */
+    font-size: 1em;
     /* Inherit body font by default, or set specific one */
-    /* font-family: inherit; */
+    font-family: inherit; /* Ensure inputs use the body font */
     -webkit-appearance: none; /* Remove default mobile styling */
     -moz-appearance: none;
     appearance: none;
@@ -88,56 +88,57 @@ small {
     display: block;
     margin-top: 3px;
     margin-bottom: 10px;
-    color: #667788; /* Softer grey */
+    color: #667788;
     font-size: 0.85em;
     line-height: 1.4;
 }
 
 /* Buttons */
 button {
-    padding: 12px 18px; /* Larger padding */
+    padding: 12px 18px;
     margin: 10px 5px 5px 0;
-    background-color: #3498db; /* Brighter blue */
+    background-color: #3498db;
     color: white;
     border: none;
     border-radius: 5px;
     cursor: pointer;
     font-size: 1em;
     font-weight: 500;
-    transition: background-color 0.2s ease; /* Smooth transition */
+    transition: background-color 0.2s ease;
     -webkit-appearance: none;
     -moz-appearance: none;
     appearance: none;
+    font-family: inherit; /* Ensure buttons use the body font */
 }
 button:hover:not(:disabled) {
-    background-color: #2980b9; /* Darker blue on hover */
+    background-color: #2980b9;
 }
 button:disabled {
-    background-color: #bdc3c7; /* Lighter grey when disabled */
+    background-color: #bdc3c7;
     cursor: not-allowed;
     opacity: 0.7;
 }
 
 button#saveSettingsBtn {
-    background-color: #2ecc71; /* Green */
+    background-color: #2ecc71;
 }
 button#saveSettingsBtn:hover:not(:disabled) {
-    background-color: #27ae60; /* Darker green */
+    background-color: #27ae60;
 }
 
 button#stopBtn {
-    background-color: #e74c3c; /* Red */
+    background-color: #e74c3c;
 }
 button#stopBtn:hover:not(:disabled) {
-    background-color: #c0392b; /* Darker red */
+    background-color: #c0392b;
 }
 
 #resetCrashBtn {
-    background-color: #f39c12; /* Yellow/Orange */
+    background-color: #f39c12;
     color: white;
 }
 #resetCrashBtn:hover:not(:disabled) {
-    background-color: #e67e22; /* Darker orange */
+    background-color: #e67e22;
 }
 
 
@@ -148,7 +149,7 @@ button#stopBtn:hover:not(:disabled) {
     font-size: 1.15em;
     padding: 8px;
     border-radius: 4px;
-    background-color: #ecf0f1; /* Very light grey background */
+    background-color: #ecf0f1;
     display: inline-block; /* Prevent full width */
     word-wrap: break-word; /* Wrap long status messages */
 }
@@ -165,12 +166,12 @@ button#stopBtn:hover:not(:disabled) {
 }
 
 /* Speed Display States */
-#display[style*="color: orange"] { /* Speeding */
+#display[style*="color: orange"] {
     color: #e67e22 !important;
     font-weight: bold;
     background-color: #fdf3e1;
 }
-#display[style*="color: red"] { /* Crash */
+#display[style*="color: red"] {
     color: #c0392b !important;
     font-weight: bold;
     background-color: #fbe6e4;
@@ -185,9 +186,9 @@ button#stopBtn:hover:not(:disabled) {
 /* Crash Alert Area */
 #crashAlertInfo {
     display: none; /* Hidden by default */
-    color: #a94442; /* Dark red text */
-    background-color: #f2dede; /* Light red background */
-    border: 1px solid #ebccd1; /* Red border */
+    color: #a94442;
+    background-color: #f2dede;
+    border: 1px solid #ebccd1;
     padding: 15px 20px;
     margin-top: 20px;
 }
@@ -204,7 +205,7 @@ button#stopBtn:hover:not(:disabled) {
     display: inline-block;
     margin-top: 15px;
     padding: 12px 20px;
-    background-color: #d9534f; /* Bootstrap danger red */
+    background-color: #d9534f;
     color: white;
     text-decoration: none;
     border-radius: 5px;
@@ -215,11 +216,11 @@ button#stopBtn:hover:not(:disabled) {
     transition: background-color 0.2s ease;
 }
 #crashAlertInfo a#smsLink:hover {
-    background-color: #c9302c; /* Darker red */
+    background-color: #c9302c;
 }
 /* Style for the map link inside the crash alert */
 #crashLocation a {
-    color: #337ab7; /* Standard link blue */
+    color: #337ab7;
     text-decoration: underline;
 }
 
@@ -227,7 +228,7 @@ button#stopBtn:hover:not(:disabled) {
 hr {
     margin: 25px 0;
     border: 0;
-    border-top: 1px solid #dcdcdc; /* Slightly darker rule */
+    border-top: 1px solid #dcdcdc;
 }
 hr.thin-hr { /* Specific thin rule */
     margin: 15px 0;
@@ -240,7 +241,7 @@ hr.thin-hr { /* Specific thin rule */
     padding: 15px;
     background-color: #fff;
     border-radius: 5px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.08); /* Use softer shadow */
+    box-shadow: 0 2px 4px rgba(0,0,0,0.08);
     border: 1px solid #e0e0e0;
 }
 
@@ -259,12 +260,12 @@ hr.thin-hr { /* Specific thin rule */
     overflow-y: auto; /* Add scrollbar when content exceeds max-height */
     border: 1px solid #e0e0e0;
     border-radius: 5px; /* Match container */
-    background-color: #fdfdfd; /* Slightly off-white */
+    background-color: #fdfdfd;
 }
 #speedLog li {
-    padding: 8px 12px; /* Adjusted padding */
+    padding: 8px 12px;
     border-bottom: 1px solid #f0f0f0;
-    font-size: 0.9em; /* Slightly smaller font */
+    font-size: 0.9em;
     color: #555;
     font-family: "Menlo", "Monaco", "Consolas", "Courier New", monospace; /* Monospace font */
     white-space: nowrap; /* Prevent wrapping */
@@ -274,6 +275,6 @@ hr.thin-hr { /* Specific thin rule */
 #speedLog li:last-child {
     border-bottom: none; /* Remove border from the last item */
 }
-#speedLog li:nth-child(even) { /* Zebra striping */
+#speedLog li:nth-child(even) {
     background-color: #f8f8f8;
 }
