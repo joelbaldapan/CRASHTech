@@ -2,36 +2,64 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests">
-    
+
     <link rel="stylesheet" href="style.css">
-    <link rel="image_src" href="images/icons/thumbnail.png">
-    <link rel="icon" href="images/icons/icon.png">
-    
     <script type="module" src="main.js" defer></script>
-    <title>Speed Detector</title>
+    <title>Speed & Crash Detector Prototype</title>
 </head>
 <body>
-    <h1>[PROTOTYE] SPEED DETECTOR</h1>
+    <h1>[PROTOTYE] SPEED & CRASH DETECTOR</h1>
+    <h2>Note: Uses GPS speed for detection. SMS sending requires manual confirmation. GPS accuracy may vary.</h2>
 
-    <!-- Speed Display -->
-    <p id="display">Speed: 0 km/h</p>
+    <div class="settings">
+        <h2>Settings</h2>
+        <label for="userName">Your Name:</label>
+        <input type="text" id="userName" placeholder="e.g., Juan dela Cruz"><br>
 
-    <!-- Speed Limit Input -->
-    <label for="speedLimit">Speed Limit (km/h): </label>
-    <input type="number" id="speedLimit" value="50" min="1">
+        <label for="phoneNumbers">Emergency Contacts (PH numbers, comma-separated):</label>
+        <input type="text" id="phoneNumbers" placeholder="e.g., 09171234567,+639287654321"><br>
+        <small>Use format 09xxxxxxxxx or +639xxxxxxxxx</small><br>
 
-    <!-- Start & Stop Buttons -->
-    <button id="startBtn">Start</button>
-    <button id="stopBtn">Stop</button>
+        <label for="minSpeedForCrashCheck">Min Speed Before Drop (km/h):</label>
+        <input type="number" id="minSpeedForCrashCheck" value="30" min="10" step="5"><br>
+        <small>Must be above this speed before a sudden stop is checked.</small><br>
 
-    <!-- Speed Log -->
-    <h2>Speed Log</h2>
-    <ul id="speedLog"></ul>
+        <label for="maxSpeedAfterCrash">Max Speed After Drop (km/h):</label>
+        <input type="number" id="maxSpeedAfterCrash" value="5" min="0" step="1"><br>
+        <small>Speed must drop below this to trigger alert.</small><br>
 
-    <!-- Audio for Speed Alert -->
-    <audio id="speedAlert" src="Speed Alert.mp3"></audio>
+        <label for="minDecelerationForCrash">Min Speed Drop (km/h):</label>
+        <input type="number" id="minDecelerationForCrash" value="25" min="10" step="5"><br>
+        <small>How much speed must decrease between readings.</small><br>
 
-</body>
+        <button id="saveSettingsBtn">Save Settings</button>
+        <p id="settingsStatus"></p>
+    </div>
+
+    <hr>
+
+    <div class="controls">
+        <h2>Monitoring</h2>
+        <button id="startBtn">Start Monitoring</button>
+        <button id="stopBtn" disabled>Stop Monitoring</button>
+        <p id="monitoringStatus">Status: Idle</p>
+        <p id="display">Speed: 0.0 km/h</p> </div>
+
+    <hr>
+
+     <div id="crashAlertInfo" style="display: none;">
+        <h2>CRASH DETECTED! (Sudden Stop)</h2>
+        <p>Attempting to prepare emergency message...</p>
+        <p id="crashLocation">Fetching location...</p>
+        <p>
+            <a id="smsLink" href="#" style="display: none;">
+                Tap Here to SEND Emergency SMS
+            </a>
+        </p>
+         <button id="resetCrashBtn">Reset Alert</button>
+    </div>
+
+    </body>
 </html>
