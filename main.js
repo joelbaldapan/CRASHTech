@@ -3,30 +3,23 @@ const startBtn = document.getElementById("startBtn");
 const stopBtn = document.getElementById("stopBtn");
 const monitoringStatus = document.getElementById("monitoringStatus");
 const display = document.getElementById("display");
+const speedLog = document.getElementById("speedLog"); // Added Speed Log UL element
 
 // Settings elements
-const userNameInput = document.getElementById("userName");
-const phoneNumbersInput = document.getElementById("phoneNumbers");
-const speedLimitInput = document.getElementById("speedLimit"); // Added
-const minSpeedForCrashCheckInput = document.getElementById("minSpeedForCrashCheck");
-const maxSpeedAfterCrashInput = document.getElementById("maxSpeedAfterCrash");
-const minDecelerationForCrashInput = document.getElementById("minDecelerationForCrash");
-const saveSettingsBtn = document.getElementById("saveSettingsBtn");
-const settingsStatus = document.getElementById("settingsStatus");
+// ... (keep all settings elements)
+const speedLimitInput = document.getElementById("speedLimit");
 
 // Crash Alert elements
-const crashAlertInfo = document.getElementById("crashAlertInfo");
-const crashLocationDisplay = document.getElementById("crashLocation");
-const smsLink = document.getElementById("smsLink");
-const resetCrashBtn = document.getElementById("resetCrashBtn");
-const speedAlertSound = document.getElementById("speedAlertSound"); // Added Audio Element
+// ... (keep all crash alert elements)
+const speedAlertSound = document.getElementById("speedAlertSound");
 
 // --- State Variables ---
+// ... (keep isMonitoring, watchId, previousSpeedKmH, crashDetected, isSpeeding)
 let isMonitoring = false;
 let watchId = null;
 let previousSpeedKmH = 0;
 let crashDetected = false;
-let isSpeeding = false; // Added: Track if currently exceeding speed limit
+let isSpeeding = false;
 
 // --- Constants ---
 const LOCATION_TIMEOUT = 15000;
@@ -35,6 +28,7 @@ const GEOLOCATION_OPTIONS = {
     maximumAge: 5000,
     timeout: 10000
 };
+const MAX_LOG_ENTRIES = 100; // Limit the number of log entries
 
 // --- Initialization ---
 loadSettings();
@@ -50,42 +44,32 @@ resetCrashBtn.addEventListener("click", resetCrashAlert);
 function startMonitoring() {
     if (isMonitoring) return;
 
-    // Basic Checks (APIs, Settings)
-    if (!("geolocation" in navigator)) {
-        monitoringStatus.textContent = "Error: Geolocation API not supported.";
-        return;
-    }
-     if (!userNameInput.value || !phoneNumbersInput.value || !speedLimitInput.value) { // Added speed limit check
-         monitoringStatus.textContent = "Error: Please set User Name, Contacts, and Speed Limit first.";
-         settingsStatus.textContent = "Save settings before starting.";
-         settingsStatus.style.color = "red";
-         return;
-    }
+    // Basic Checks...
+    if (!("geolocation" in navigator)) { /* ... */ return; }
+    if (!userNameInput.value || !phoneNumbersInput.value || !speedLimitInput.value) { /* ... */ return; }
 
     // Reset state and UI
     monitoringStatus.textContent = "Status: Starting...";
     crashDetected = false;
-    isSpeeding = false; // Reset speeding flag
-    display.style.color = ''; // Reset display color
+    isSpeeding = false;
+    display.style.color = '';
     crashAlertInfo.style.display = 'none';
     previousSpeedKmH = 0;
+    if (speedLog) speedLog.innerHTML = ""; // Clear the speed log
 
-    // Start Geolocation Watch
+    // Start Geolocation Watch...
     if (navigator.geolocation) {
         watchId = navigator.geolocation.watchPosition(
             handlePositionUpdate,
             handleGeolocationError,
             GEOLOCATION_OPTIONS
         );
-
         isMonitoring = true;
         startBtn.disabled = true;
         stopBtn.disabled = false;
         monitoringStatus.textContent = "Status: Monitoring speed...";
         console.log("Monitoring started with watchId:", watchId);
-    } else {
-         monitoringStatus.textContent = "Error: Geolocation is not available.";
-    }
+    } else { /* ... */ }
 }
 
 function stopMonitoring() {
@@ -94,26 +78,27 @@ function stopMonitoring() {
     navigator.geolocation.clearWatch(watchId);
     watchId = null;
 
-    // Update UI and reset state
+    // Update UI and reset state...
     isMonitoring = false;
-    isSpeeding = false; // Reset speeding flag
+    isSpeeding = false;
     startBtn.disabled = false;
     stopBtn.disabled = true;
     monitoringStatus.textContent = "Status: Idle";
     display.textContent = "Speed: 0.0 km/h";
-    display.style.color = ''; // Reset display color
+    display.style.color = '';
     crashAlertInfo.style.display = 'none';
     previousSpeedKmH = 0;
+    // Don't clear the log on stop, user might want to see it
     console.log("Monitoring stopped.");
 }
 
 function handlePositionUpdate(position) {
-    if (!isMonitoring) return; // Exit if not monitoring
+    if (!isMonitoring) return;
 
     const currentSpeedMPS = position.coords.speed;
-    const timestamp = position.timestamp;
+    const timestamp = position.timestamp; // Use timestamp from position data
     let currentSpeedKmH = 0;
-    let speedText = "Speed: N/A";
+    let speedText = "Speed: N/A"; // Default text
 
     if (currentSpeedMPS !== null && currentSpeedMPS >= 0) {
         currentSpeedKmH = currentSpeedMPS * 3.6;
@@ -121,35 +106,52 @@ function handlePositionUpdate(position) {
     }
     display.textContent = speedText;
 
-    // --- Speed Limit Alert Logic ---
-    if (!crashDetected) { // Only check speed limit if no crash is detected
-        const speedLimit = parseFloat(speedLimitInput.value);
+    // --- Speed Log Logic ---
+    if (speedLog) {
+        const currentTime = new Date(timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }); // Format time
 
+        // Limit log entries
+        while (speedLog.children.length >= MAX_LOG_ENTRIES) {
+            speedLog.removeChild(speedLog.firstChild); // Remove the oldest entry
+        }
+
+        // Append new entry
+        const listItem = document.createElement("li");
+        // Use the speedText which already has "km/h" or "N/A"
+        listItem.textContent = `${currentTime} - ${speedText}`;
+        speedLog.appendChild(listItem);
+        // Optional: Scroll to bottom
+        // speedLog.scrollTop = speedLog.scrollHeight;
+    }
+    // --- End Speed Log Logic ---
+
+
+    // --- Speed Limit Alert Logic ---
+    // ... (keep the existing speed limit logic)
+    if (!crashDetected) {
+        const speedLimit = parseFloat(speedLimitInput.value);
         if (!isNaN(speedLimit) && speedAlertSound && currentSpeedKmH > 0) {
-            if (currentSpeedKmH > speedLimit && !isSpeeding) {
-                // Just started speeding
+             if (currentSpeedKmH > speedLimit && !isSpeeding) {
                 isSpeeding = true;
-                display.style.color = 'orange'; // Indicate speeding visually
+                display.style.color = 'orange';
                 speedAlertSound.play().catch(e => console.error("Audio play failed:", e));
                 console.log(`Speed limit (${speedLimit} km/h) exceeded. Current: ${currentSpeedKmH.toFixed(1)} km/h`);
             } else if (currentSpeedKmH <= speedLimit && isSpeeding) {
-                // Just stopped speeding
                 isSpeeding = false;
-                display.style.color = ''; // Reset color
-                // Optional: Stop sound if it loops
-                // speedAlertSound.pause();
-                // speedAlertSound.currentTime = 0;
+                display.style.color = '';
                 console.log(`Speed back below limit (${speedLimit} km/h). Current: ${currentSpeedKmH.toFixed(1)} km/h`);
             }
         } else if (isSpeeding) {
-            // Handles cases where speed becomes N/A or 0 while speeding was true
             isSpeeding = false;
             display.style.color = '';
         }
-    } // End of Speed Limit Check Block
+    }
+    // --- End Speed Limit Alert Logic ---
 
-    // --- Crash Detection Logic (Only if no crash already detected) ---
-    if (!crashDetected) {
+
+    // --- Crash Detection Logic ---
+    // ... (keep the existing crash detection logic)
+     if (!crashDetected) {
         const minSpeedBefore = parseFloat(minSpeedForCrashCheckInput.value);
         const maxSpeedAfter = parseFloat(maxSpeedAfterCrashInput.value);
         const minDeceleration = parseFloat(minDecelerationForCrashInput.value);
@@ -160,39 +162,44 @@ function handlePositionUpdate(position) {
             actualDeceleration >= minDeceleration)
         {
             console.log(`CRASH DETECTED (Sudden Stop): Speed dropped from ${previousSpeedKmH.toFixed(1)} to ${currentSpeedKmH.toFixed(1)} km/h (Drop: ${actualDeceleration.toFixed(1)} km/h)`);
-            display.style.color = 'red'; // Make speed display red on crash
-            triggerCrashAlert(); // Trigger the crash alert process
+            display.style.color = 'red';
+            triggerCrashAlert();
         }
-    } // End of Crash Detection Block
+    }
+    // --- End Crash Detection Logic ---
 
-    // Store current speed for the next comparison (only if valid)
+
+    // Store current speed for the next comparison
     if (currentSpeedMPS !== null) {
        previousSpeedKmH = currentSpeedKmH;
     }
 }
 
+// --- Other Functions (handleGeolocationError, triggerCrashAlert, prepareSmsLink, resetCrashAlert, saveSettings, loadSettings, getCleanedPhoneNumbers) ---
+// Keep these functions exactly as they were in the previous version.
+
 function handleGeolocationError(error) {
+    // ... (no changes needed here) ...
     monitoringStatus.textContent = `Status: Geolocation Error (${error.code}: ${error.message})`;
     display.textContent = "Speed: Error";
-    display.style.color = ''; // Reset color on error
-    isSpeeding = false; // Reset speeding state
+    display.style.color = '';
+    isSpeeding = false;
     console.error("Geolocation Error:", error);
-    if (error.code === 1) { // Permission Denied
+    if (error.code === 1) {
         stopMonitoring();
-         monitoringStatus.textContent = "Status: Geolocation Permission Denied. Monitoring stopped.";
+        monitoringStatus.textContent = "Status: Geolocation Permission Denied. Monitoring stopped.";
     }
 }
 
-
 function triggerCrashAlert() {
+    // ... (no changes needed here) ...
     if (crashDetected) return;
     crashDetected = true;
-    isSpeeding = false; // Cannot be speeding if crashed
-    display.style.color = 'red'; // Ensure display is red
+    isSpeeding = false;
+    display.style.color = 'red';
     monitoringStatus.textContent = "Status: CRASH DETECTED!";
-    monitoringStatus.style.color = "red"; // Make status red too
-    // Consider stopping speedAlertSound if it was playing?
-    // if (speedAlertSound) speedAlertSound.pause();
+    monitoringStatus.style.color = "red";
+    // if (speedAlertSound) speedAlertSound.pause(); // Consider pausing alert sound
 
     crashAlertInfo.style.display = 'block';
     crashLocationDisplay.textContent = "Fetching location...";
@@ -217,33 +224,19 @@ function triggerCrashAlert() {
 }
 
 function prepareSmsLink(latitude, longitude) {
-    // ... (This function remains the same as before) ...
+    // ... (no changes needed here) ...
     const userName = userNameInput.value.trim() || "User";
     const phoneNumbers = getCleanedPhoneNumbers();
-
-    if (phoneNumbers.length === 0) {
-        smsLink.textContent = "No emergency contacts saved!";
-        smsLink.style.pointerEvents = 'none';
-        smsLink.style.backgroundColor = 'grey';
-         smsLink.style.color = 'white';
-        smsLink.style.padding = '12px 20px';
-        smsLink.style.borderRadius = '5px';
-        smsLink.style.textDecoration = 'none';
-        smsLink.style.display = 'inline-block';
-        return;
-    }
-
+    if (phoneNumbers.length === 0) { /* ... handle no numbers ... */ return; }
     let locationText = "an unknown location (location services failed)";
     if (latitude !== null && longitude !== null) {
         locationText = `location Lat: ${latitude.toFixed(5)}, Lon: ${longitude.toFixed(5)}`;
     }
-
     const messageBody = `This is an automatic crash detection alert from ${userName}'s phone. A potential crash (sudden stop) has been detected at ${locationText}. Please contact emergency services or check on them immediately.`;
-
     const encodedBody = encodeURIComponent(messageBody);
     const numbersString = phoneNumbers.join(',');
-
     smsLink.href = `sms:${numbersString}?body=${encodedBody}`;
+    // ... (set styles for smsLink) ...
     smsLink.textContent = "Tap Here to SEND Emergency SMS";
     smsLink.style.display = 'inline-block';
     smsLink.style.marginTop = '15px';
@@ -255,19 +248,19 @@ function prepareSmsLink(latitude, longitude) {
     smsLink.style.fontWeight = 'bold';
     smsLink.style.textAlign = 'center';
     smsLink.style.pointerEvents = 'auto';
-
     console.log("SMS link prepared for:", numbersString);
 }
 
 function resetCrashAlert() {
+    // ... (no changes needed here) ...
     crashDetected = false;
     crashAlertInfo.style.display = 'none';
     smsLink.href = '#';
     smsLink.style.display = 'none';
     monitoringStatus.textContent = isMonitoring ? "Status: Monitoring speed..." : "Status: Idle";
-    monitoringStatus.style.color = ""; // Reset status color
-    display.style.color = ''; // Reset display color (speeding state will be re-evaluated)
-    isSpeeding = false; // Explicitly reset speeding state here too
+    monitoringStatus.style.color = "";
+    display.style.color = '';
+    isSpeeding = false;
     previousSpeedKmH = 0;
     console.log("Crash alert reset.");
     if (!isMonitoring && watchId === null) {
@@ -278,67 +271,48 @@ function resetCrashAlert() {
     }
 }
 
-
-// --- Settings Persistence ---
-
 function saveSettings() {
+    // ... (no changes needed here) ...
     const userName = userNameInput.value.trim();
     const phoneNumbersRaw = phoneNumbersInput.value.trim();
-    const speedLimit = speedLimitInput.value; // Added
+    const speedLimit = speedLimitInput.value;
     const minSpeed = minSpeedForCrashCheckInput.value;
     const maxSpeed = maxSpeedAfterCrashInput.value;
     const minDecel = minDecelerationForCrashInput.value;
-
-    // Basic validation
-    if (!userName || !phoneNumbersRaw || !speedLimit || !minSpeed || !maxSpeed || !minDecel ) { // Check all fields
-        settingsStatus.textContent = "Please fill in all setting fields.";
-        settingsStatus.style.color = "red";
-        return;
-    }
+    if (!userName || !phoneNumbersRaw || !speedLimit || !minSpeed || !maxSpeed || !minDecel ) { /* ... */ return; }
     const phoneNumbersClean = getCleanedPhoneNumbers(phoneNumbersRaw);
-     if (phoneNumbersClean.length === 0) {
-        settingsStatus.textContent = "No valid PH phone numbers. Use 09xxxxxxxxx or +639xxxxxxxxx, comma-separated.";
-        settingsStatus.style.color = "red";
-        return;
-    }
-
-    // Save all settings
+    if (phoneNumbersClean.length === 0) { /* ... */ return; }
     localStorage.setItem('crashDetectorUserName', userName);
     localStorage.setItem('crashDetectorPhoneNumbers', phoneNumbersRaw);
-    localStorage.setItem('crashDetectorSpeedLimit', speedLimit); // Added
+    localStorage.setItem('crashDetectorSpeedLimit', speedLimit);
     localStorage.setItem('crashDetectorMinSpeed', minSpeed);
     localStorage.setItem('crashDetectorMaxSpeed', maxSpeed);
     localStorage.setItem('crashDetectorMinDecel', minDecel);
-
     settingsStatus.textContent = "Settings saved successfully!";
     settingsStatus.style.color = "green";
     console.log("Settings saved:", { userName, phoneNumbersRaw, speedLimit, minSpeed, maxSpeed, minDecel });
-
     setTimeout(() => { settingsStatus.textContent = ""; }, 3000);
 }
 
 function loadSettings() {
+    // ... (no changes needed here) ...
     const savedName = localStorage.getItem('crashDetectorUserName');
     const savedNumbers = localStorage.getItem('crashDetectorPhoneNumbers');
-    const savedSpeedLimit = localStorage.getItem('crashDetectorSpeedLimit'); // Added
+    const savedSpeedLimit = localStorage.getItem('crashDetectorSpeedLimit');
     const savedMinSpeed = localStorage.getItem('crashDetectorMinSpeed');
     const savedMaxSpeed = localStorage.getItem('crashDetectorMaxSpeed');
     const savedMinDecel = localStorage.getItem('crashDetectorMinDecel');
-
     if (savedName) userNameInput.value = savedName;
     if (savedNumbers) phoneNumbersInput.value = savedNumbers;
-    if (savedSpeedLimit) speedLimitInput.value = savedSpeedLimit; // Added
+    if (savedSpeedLimit) speedLimitInput.value = savedSpeedLimit;
     if (savedMinSpeed) minSpeedForCrashCheckInput.value = savedMinSpeed;
     if (savedMaxSpeed) maxSpeedAfterCrashInput.value = savedMaxSpeed;
     if (savedMinDecel) minDecelerationForCrashInput.value = savedMinDecel;
-
     console.log("Settings loaded.");
 }
 
-// --- Utility Functions ---
-
 function getCleanedPhoneNumbers(rawString = null) {
-    // ... (This function remains the same as before) ...
+    // ... (no changes needed here) ...
     const inputString = rawString === null ? phoneNumbersInput.value : rawString;
     const phRegex = /^(09\d{9}|\+639\d{9})$/;
     return inputString

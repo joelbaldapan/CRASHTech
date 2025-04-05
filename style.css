@@ -1,24 +1,66 @@
-/* ... (keep all previous CSS rules) ... */
+/* ... (keep all previous CSS) ... */
 
 hr.thin-hr {
-    margin: 15px 0; /* Adjust spacing */
+    margin: 15px 0;
     border: 0;
-    border-top: 1px solid #eee; /* Lighter rule */
+    border-top: 1px solid #eee;
 }
 
 /* Optional: Style for when speeding */
-#display[style*="color: orange"] { /* Selects the display when its color is orange */
-    font-weight: bold; /* Make it bold when speeding */
-}
-
-#display[style*="color: red"] { /* Selects the display when its color is red (crash) */
+#display[style*="color: orange"] {
     font-weight: bold;
-    animation: blinker 1s linear infinite; /* Blinking effect for crash */
 }
 
-/* Blinker animation */
+/* Optional: Style for crash display */
+#display[style*="color: red"] {
+    font-weight: bold;
+    animation: blinker 1s linear infinite;
+}
+
 @keyframes blinker {
   50% {
     opacity: 0.5;
   }
+}
+
+/* Speed Log Styling */
+.log-container {
+    margin-top: 20px;
+    padding: 15px;
+    background-color: #fff;
+    border-radius: 5px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.log-container h2 {
+    margin-top: 0;
+    margin-bottom: 10px;
+    font-size: 1.2em;
+    color: #333;
+}
+
+#speedLog {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    max-height: 250px; /* Limit height and enable scrolling */
+    overflow-y: auto; /* Add scrollbar when content exceeds max-height */
+    border: 1px solid #eee;
+    border-radius: 4px;
+}
+
+#speedLog li {
+    padding: 6px 12px; /* Adjust padding */
+    border-bottom: 1px solid #f0f0f0;
+    font-size: 0.95em; /* Adjust font size */
+    color: #444; /* Slightly darker text */
+    font-family: monospace; /* Use monospace for better alignment */
+}
+
+#speedLog li:last-child {
+    border-bottom: none; /* Remove border from the last item */
+}
+
+#speedLog li:nth-child(odd) {
+    background-color: #f9f9f9; /* Optional: zebra striping */
 }
