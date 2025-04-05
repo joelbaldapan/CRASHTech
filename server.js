@@ -114,5 +114,4 @@ app.post('/api/send-philsms', async (req, res) => { // Changed path slightly for
 app.listen(port, () => {
     console.log(`✅ SMS Backend (PhilSMS) listening at http://localhost:${port}`);
     console.log(`   Frontend should call: http://localhost:${port}/api/send-philsms`); // Updated path
-    console.log(`   Ensure frontend origin (${frontendOrigin}) is allowed by CORS.`);
 });
