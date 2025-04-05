@@ -1,66 +1,248 @@
-/* ... (keep all previous CSS) ... */
-
-hr.thin-hr {
-    margin: 15px 0;
-    border: 0;
-    border-top: 1px solid #eee;
+/* Basic Reset & Body */
+body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+    padding: 15px;
+    background-color: #f4f7f6; /* Slightly softer background */
+    line-height: 1.6;
+    color: #333;
+    margin: 0; /* Ensure no default margin */
+    -webkit-tap-highlight-color: transparent; /* Remove tap highlight on mobile */
 }
 
-/* Optional: Style for when speeding */
-#display[style*="color: orange"] {
-    font-weight: bold;
+/* Headings */
+h1, h2 {
+    color: #2c3e50; /* Darker blue-grey */
+    margin-bottom: 0.8em;
+}
+h1 {
+    font-size: 1.8em;
+    text-align: center;
+    margin-bottom: 0.5em;
+}
+h2 {
+   font-size: 1.3em;
+   border-bottom: 1px solid #e0e0e0;
+   padding-bottom: 5px;
+   margin-top: 1.5em; /* Add space above H2 */
 }
 
-/* Optional: Style for crash display */
-#display[style*="color: red"] {
+/* Container Blocks */
+.settings, .controls, .log-container, #crashAlertInfo {
+    background-color: #ffffff;
+    padding: 15px 20px; /* Adjust padding */
+    margin-bottom: 20px;
+    border-radius: 8px; /* Slightly more rounded corners */
+    box-shadow: 0 3px 6px rgba(0,0,0,0.08); /* Soft shadow */
+    border: 1px solid #e0e0e0; /* Subtle border */
+}
+
+/* Form Elements */
+label {
+    display: block;
+    margin-bottom: 5px;
+    margin-top: 12px;
+    font-weight: 600; /* Slightly bolder labels */
+    font-size: 0.95em;
+    color: #555;
+}
+
+input[type="text"], input[type="number"] {
+    width: 100%; /* Full width */
+    padding: 10px 12px; /* Comfortable padding */
+    margin-bottom: 5px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    box-sizing: border-box; /* Include padding/border in width */
+    font-size: 1em;
+    -webkit-appearance: none; /* Remove default mobile styling */
+    -moz-appearance: none;
+    appearance: none;
+}
+input[type="number"] {
+     -moz-appearance: textfield; /* Ensure number input looks like text input */
+}
+/* Remove spinners for number input */
+input[type=number]::-webkit-inner-spin-button,
+input[type=number]::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+
+small {
+    display: block;
+    margin-top: 3px;
+    margin-bottom: 10px;
+    color: #667788; /* Softer grey */
+    font-size: 0.85em;
+    line-height: 1.4;
+}
+
+/* Buttons */
+button {
+    padding: 12px 18px; /* Larger padding */
+    margin: 10px 5px 5px 0;
+    background-color: #3498db; /* Brighter blue */
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 1em;
+    font-weight: 500;
+    transition: background-color 0.2s ease; /* Smooth transition */
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+}
+button:hover:not(:disabled) {
+    background-color: #2980b9; /* Darker blue on hover */
+}
+button:disabled {
+    background-color: #bdc3c7; /* Lighter grey when disabled */
+    cursor: not-allowed;
+    opacity: 0.7;
+}
+
+button#saveSettingsBtn {
+    background-color: #2ecc71; /* Green */
+}
+button#saveSettingsBtn:hover:not(:disabled) {
+    background-color: #27ae60; /* Darker green */
+}
+
+button#stopBtn {
+    background-color: #e74c3c; /* Red */
+}
+button#stopBtn:hover:not(:disabled) {
+    background-color: #c0392b; /* Darker red */
+}
+
+#resetCrashBtn {
+    background-color: #f39c12; /* Yellow/Orange */
+    color: white;
+}
+#resetCrashBtn:hover:not(:disabled) {
+    background-color: #e67e22; /* Darker orange */
+}
+
+
+/* Status & Display Paragraphs */
+#monitoringStatus, #display {
     font-weight: bold;
+    margin-top: 15px;
+    font-size: 1.15em;
+    padding: 8px;
+    border-radius: 4px;
+    background-color: #ecf0f1; /* Very light grey background */
+    display: inline-block; /* Prevent full width */
+}
+#settingsStatus {
+    margin-top: 10px;
+    font-weight: bold;
+    padding: 5px 0;
+}
+#settingsStatus[style*="color: green"]{
+     color: #27ae60 !important;
+}
+#settingsStatus[style*="color: red"]{
+     color: #c0392b !important;
+}
+
+/* Speed Display States */
+#display[style*="color: orange"] { /* Speeding */
+    color: #e67e22 !important; /* Use important to override inline style if needed */
+    font-weight: bold;
+    background-color: #fdf3e1; /* Light orange background */
+}
+#display[style*="color: red"] { /* Crash */
+    color: #c0392b !important;
+    font-weight: bold;
+    background-color: #fbe6e4; /* Light red background */
     animation: blinker 1s linear infinite;
 }
 
+/* Blinker Animation */
 @keyframes blinker {
-  50% {
-    opacity: 0.5;
-  }
+  50% { opacity: 0.5; }
+}
+
+/* Crash Alert Area */
+#crashAlertInfo {
+    display: none; /* Hidden by default */
+    color: #a94442; /* Dark red text */
+    background-color: #f2dede; /* Light red background */
+    border: 1px solid #ebccd1; /* Red border */
+    padding: 15px 20px;
+    margin-top: 20px;
+}
+#crashAlertInfo h2 {
+    color: #a94442;
+    margin-top: 0;
+    border-bottom: none; /* Remove heading border inside alert */
+}
+#crashAlertInfo p {
+    margin-bottom: 10px;
+}
+#crashAlertInfo a#smsLink { /* Style the SMS link */
+    display: inline-block;
+    margin-top: 15px;
+    padding: 12px 20px;
+    background-color: #d9534f; /* Bootstrap danger red */
+    color: white;
+    text-decoration: none;
+    border-radius: 5px;
+    font-weight: bold;
+    text-align: center;
+    cursor: pointer;
+    border: 1px solid #d43f3a;
+    transition: background-color 0.2s ease;
+}
+#crashAlertInfo a#smsLink:hover {
+    background-color: #c9302c; /* Darker red */
+}
+/* Style for the map link inside the crash alert */
+#crashLocation a {
+    color: #337ab7; /* Standard link blue */
+    text-decoration: underline;
+}
+
+/* Horizontal Rules */
+hr {
+    margin: 25px 0;
+    border: 0;
+    border-top: 1px solid #dcdcdc; /* Slightly darker rule */
+}
+hr.thin-hr { /* Specific thin rule */
+    margin: 15px 0;
+    border-top: 1px solid #eee;
 }
 
 /* Speed Log Styling */
-.log-container {
-    margin-top: 20px;
-    padding: 15px;
-    background-color: #fff;
-    border-radius: 5px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-}
-
 .log-container h2 {
-    margin-top: 0;
-    margin-bottom: 10px;
-    font-size: 1.2em;
-    color: #333;
+   border-bottom: none; /* Remove border for log heading */
+   margin-bottom: 10px;
 }
-
 #speedLog {
     list-style: none;
     padding: 0;
     margin: 0;
-    max-height: 250px; /* Limit height and enable scrolling */
-    overflow-y: auto; /* Add scrollbar when content exceeds max-height */
-    border: 1px solid #eee;
-    border-radius: 4px;
+    max-height: 250px;
+    overflow-y: auto;
+    border: 1px solid #e0e0e0;
+    border-radius: 5px;
+    background-color: #fdfdfd; /* Slightly off-white */
 }
-
 #speedLog li {
-    padding: 6px 12px; /* Adjust padding */
+    padding: 8px 12px; /* Adjusted padding */
     border-bottom: 1px solid #f0f0f0;
-    font-size: 0.95em; /* Adjust font size */
-    color: #444; /* Slightly darker text */
-    font-family: monospace; /* Use monospace for better alignment */
+    font-size: 0.9em; /* Slightly smaller font */
+    color: #555;
+    font-family: "Menlo", "Monaco", "Consolas", "Courier New", monospace; /* Monospace font */
+    white-space: nowrap; /* Prevent wrapping */
 }
-
 #speedLog li:last-child {
-    border-bottom: none; /* Remove border from the last item */
+    border-bottom: none;
 }
-
-#speedLog li:nth-child(odd) {
-    background-color: #f9f9f9; /* Optional: zebra striping */
+#speedLog li:nth-child(even) { /* Zebra striping */
+    background-color: #f8f8f8;
 }
