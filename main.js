@@ -170,18 +170,18 @@ function handlePositionUpdate(position) {
         const speedLimit = parseFloat(speedLimitInput.value);
         if (!isNaN(speedLimit) && speedAlertSound && currentSpeedKmH > 0) {
              if (currentSpeedKmH > speedLimit && !isSpeeding) {
-                isSpeeding = true;
-                display.style.color = 'orange';
-                speedAlertSound.play().catch(e => console.error("Audio play failed:", e));
-                console.log(`Speed limit (${speedLimit} km/h) exceeded.`);
-            } else if (currentSpeedKmH <= speedLimit && isSpeeding) {
-                isSpeeding = false;
-                display.style.color = '';
-                console.log(`Speed back below limit (${speedLimit} km/h).`);
-            }
+                 isSpeeding = true;
+                 display.style.color = 'orange';
+                 speedAlertSound.play().catch(e => console.error("Audio play failed:", e));
+                 console.log(`Speed limit (${speedLimit} km/h) exceeded.`);
+             } else if (currentSpeedKmH <= speedLimit && isSpeeding) {
+                 isSpeeding = false;
+                 display.style.color = '';
+                 console.log(`Speed back below limit (${speedLimit} km/h).`);
+             }
         } else if (isSpeeding) {
-            isSpeeding = false;
-            display.style.color = '';
+             isSpeeding = false;
+             display.style.color = '';
         }
     }
     // --- End Speed Limit Alert Logic ---
@@ -261,11 +261,10 @@ function callBackendForSms(latitude, longitude) { // Renamed function
     const backendUrl = backendApiUrlInput.value.trim();
 
     // --- Validate configuration before proceeding ---
-    // *** Update error message text and condition ***
-    if (!backendUrl /* REMOVED || !apiPasscode */ ) {
-        console.error("Error: Backend API URL is missing in settings."); // Adjusted error
-        monitoringStatus.textContent = "Status: CRASH DETECTED! FAILED (Missing Backend URL in settings)."; // Adjusted error
-        crashLocationDisplay.textContent += "\nError: Cannot send alert. Backend API URL missing in settings."; // Adjusted error
+    if (!backendUrl) {
+        console.error("Error: Backend API URL is missing in settings.");
+        monitoringStatus.textContent = "Status: CRASH DETECTED! FAILED (Missing Backend URL in settings).";
+        crashLocationDisplay.textContent += "\nError: Cannot send alert. Backend API URL missing in settings.";
         return;
     }
     try { new URL(backendUrl); } catch (_) {
@@ -280,7 +279,7 @@ function callBackendForSms(latitude, longitude) { // Renamed function
 
     if (phoneNumbers.length === 0) {
         crashLocationDisplay.textContent = (latitude !== null ? `Location: Lat: ${latitude.toFixed(5)}, Lon: ${longitude.toFixed(5)}` : 'Location: Unknown') +
-                                           "\nError: No emergency contacts saved to notify.";
+                                             "\nError: No emergency contacts saved to notify.";
         monitoringStatus.textContent = "Status: CRASH DETECTED! No contacts to alert.";
         console.error("Cannot send SMS via Backend: No valid phone numbers saved.");
         return;
@@ -302,11 +301,9 @@ function callBackendForSms(latitude, longitude) { // Renamed function
     const messageBody = `Automatic Crash Detection Alert from ${userName}'s phone. Potential crash detected near ${currentDateTime} at ${locationText}. Please contact emergency services or check on them immediately.`;
 
     // --- Call Backend API ---
-    // *** Update console log and status message text ***
     console.log(`Sending data to Backend API: ${backendUrl}`);
     monitoringStatus.textContent = "Status: CRASH DETECTED! Sending alert via server..."; // Generic message
 
-    // *** Payload sends recipients as an ARRAY, REMOVED passcode ***
     const payload = {
         recipients: phoneNumbers, // Send ARRAY
         message: messageBody
@@ -318,42 +315,77 @@ function callBackendForSms(latitude, longitude) { // Renamed function
         body: JSON.stringify(payload),
     })
     .then(response => {
-        // Handle backend response
-        if (!response.ok) {
-            // REMOVED specific passcode check from error handling
-            return response.json().then(errData => { // Assume JSON error
-                 throw new Error(`Backend error ${response.status}: ${errData.error || errData.message || 'Unknown error'}`);
-            }).catch(() => { // Fallback if error body isn't JSON
-                throw new Error(`Backend responded with status ${response.status}: ${response.statusText}`);
-            });
-        }
-        return response.json(); // Parse success response
+        // *** Parse JSON first, then check response.ok ***
+        // This makes extracting the error message from the body more reliable
+        return response.json().then(data => { // Always try parsing JSON
+            if (!response.ok) {
+                // Now 'data' holds the parsed error JSON (or would have failed in .catch below)
+                let backendErrorMessage = 'Unknown backend error'; // Default message
+                // Check for the specific nested error structure from PhilSMS via backend
+                if (data && data.result && Array.isArray(data.result) && data.result.length > 0 && data.result[0].error) {
+                    backendErrorMessage = data.result[0].error;
+                }
+                // Check for the backend's own validation error structure
+                else if (data && data.error) {
+                    backendErrorMessage = data.error;
+                }
+                // Fallback if backend uses a top-level 'message' field for errors
+                else if (data && data.message) {
+                    backendErrorMessage = data.message;
+                }
+                // Throw an error with the specific message extracted
+                throw new Error(`${backendErrorMessage}`); // Simplified error message for display
+            }
+            // If response was ok, return the parsed success data
+            return data;
+        // Handle cases where the response body wasn't valid JSON *at all*
+        }).catch(parseOrLogicError => {
+            // If the error is because we threw it above, re-throw it for the final catch
+            if (parseOrLogicError instanceof Error && parseOrLogicError.message.startsWith('Backend error') || parseOrLogicError.message.includes('PhilSMS Error') || parseOrLogicError.message.includes('validation error')) {
+                 throw parseOrLogicError;
+            }
+            // Otherwise, it was likely a JSON parsing error
+            console.error("Failed to parse backend response or logic error:", parseOrLogicError);
+            // Throw a new error indicating a non-JSON response or unexpected structure
+            throw new Error(`Backend responded with status ${response.status} but failed to parse response or process error structure.`);
+        });
     })
     .then(data => {
         // Process success data (Adapt based on your actual backend response structure)
         console.log('Backend API response:', data);
         let successes = 0; let failures = 0;
+        // Check the structure your backend sends on success
         if (data && Array.isArray(data.result)) {
-            data.result.forEach(item => {
-                if (item.success) successes++;
-                else { failures++; console.error(`Failed SMS to ${item.number || 'unknown'}: ${item.error || 'Unknown error'}`); }
-            });
-            monitoringStatus.textContent = `Status: Alert via Server complete (${successes} sent, ${failures} failed).`;
-            crashLocationDisplay.textContent += `\nServer confirmation: Attempted ${successes + failures} messages. ${successes} success, ${failures} failed.`;
+             data.result.forEach(item => {
+                 if (item.success) successes++;
+                 else { failures++; console.error(`Failed SMS to ${item.number || 'unknown'}: ${item.error || 'Unknown error'}`); }
+             });
+             monitoringStatus.textContent = `Status: Alert via Server complete (${successes} sent, ${failures} failed).`;
+             // Append success info without overwriting map link
+             const successText = `\nServer confirmation: Attempted ${successes + failures} messages. ${successes} success, ${failures} failed.`;
+             crashLocationDisplay.appendChild(document.createTextNode(successText));
         }
-        else if (data && data.success) {
-             monitoringStatus.textContent = `Status: Alert via Server complete.`;
-             crashLocationDisplay.textContent += `\nServer confirmation: ${data.message || 'Alert request processed.'}`;
+        // Handle other potential success structures if your backend varies
+        else if (data && data.status === 'success') { // e.g., if backend directly mirrors PhilSMS success
+              monitoringStatus.textContent = `Status: Alert via Server complete.`;
+              const successText = `\nServer confirmation: ${data.message || 'Alert request processed.'}`;
+              crashLocationDisplay.appendChild(document.createTextNode(successText));
         }
-         else { throw new Error('Received unexpected response format from Backend API.'); }
+         else {
+             // Handle unexpected success format
+             console.warn('Received unexpected success response format from Backend API:', data);
+             throw new Error('Received unexpected success response format from Backend API.');
+         }
     })
     .catch(error => {
-        // Handle fetch/network errors
+        // This catch block now receives the error thrown from the logic above or network errors
         console.error('Error calling Backend API:', error);
-        // *** Update error message text ***
-        monitoringStatus.textContent = "Status: FAILED to send alert via server.";
+        // Display the specific error message extracted previously
+        monitoringStatus.textContent = `Status: FAILED to send alert via server (${error.message}).`;
         monitoringStatus.style.color = "red";
-        crashLocationDisplay.textContent += `\nError: Could not send automatic alert (${error.message}). Notify contacts manually if possible.`;
+        // Append error text node to crashLocationDisplay to preserve potential map link
+        const errorText = `\nError: Could not send automatic alert (${error.message}). Notify contacts manually if possible.`;
+        crashLocationDisplay.appendChild(document.createTextNode(errorText));
     });
 }
 
@@ -371,22 +403,19 @@ function resetCrashAlert() {
        stopBtn.disabled = true;
        startBtn.disabled = false;
     } else if (isMonitoring) {
-         monitoringStatus.textContent = "Status: Monitoring speed...";
+        monitoringStatus.textContent = "Status: Monitoring speed...";
     }
 }
 
 // --- Settings Persistence ---
 function saveSettings() {
-    // *** Update to remove passcode handling ***
     const userName = userNameInput.value.trim(); const phoneNumbersRaw = phoneNumbersInput.value.trim();
     const speedLimit = speedLimitInput.value; const minSpeed = minSpeedForCrashCheckInput.value;
     const maxSpeed = maxSpeedAfterCrashInput.value; const minDecel = minDecelerationForCrashInput.value;
     const backendUrl = backendApiUrlInput.value.trim(); // Use new ID
-    // REMOVED: const apiPasscode = apiPasscodeInput.value.trim();
 
-    // Update validation message
-    if (!userName || !phoneNumbersRaw || !speedLimit || !minSpeed || !maxSpeed || !minDecel || !backendUrl /* REMOVED || !apiPasscode */) {
-        settingsStatus.textContent = "Please fill in ALL setting fields, including Backend API URL."; // Adjusted message
+    if (!userName || !phoneNumbersRaw || !speedLimit || !minSpeed || !maxSpeed || !minDecel || !backendUrl
+        settingsStatus.textContent = "Please fill in ALL setting fields, including Backend API URL.";
         settingsStatus.style.color = "red"; setTimeout(() => { settingsStatus.textContent = ""; }, 3000); return;
     }
     const phoneNumbersClean = getCleanedPhoneNumbers(phoneNumbersRaw);
@@ -400,24 +429,21 @@ function saveSettings() {
     localStorage.setItem(STORAGE_PREFIX + 'minSpeed', minSpeed);
     localStorage.setItem(STORAGE_PREFIX + 'maxSpeed', maxSpeed);
     localStorage.setItem(STORAGE_PREFIX + 'minDecel', minDecel);
-    localStorage.setItem(STORAGE_PREFIX + 'backendUrl', backendUrl); // Use new key
-    // REMOVED: localStorage.setItem(STORAGE_PREFIX + 'apiPasscode', apiPasscode);
+    localStorage.setItem(STORAGE_PREFIX + 'backendUrl', backendUrl);
 
     settingsStatus.textContent = "Settings saved successfully!"; settingsStatus.style.color = "green";
-    console.log("Settings saved (including Backend API config)."); // Generic log
+    console.log("Settings saved (including Backend API config).");
     setTimeout(() => { settingsStatus.textContent = ""; }, 3000);
 }
 
 function loadSettings() {
-    // *** Update to remove passcode loading ***
     userNameInput.value = localStorage.getItem(STORAGE_PREFIX + 'userName') || '';
     phoneNumbersInput.value = localStorage.getItem(STORAGE_PREFIX + 'phoneNumbers') || '';
     speedLimitInput.value = localStorage.getItem(STORAGE_PREFIX + 'speedLimit') || '60';
     minSpeedForCrashCheckInput.value = localStorage.getItem(STORAGE_PREFIX + 'minSpeed') || '30';
     maxSpeedAfterCrashInput.value = localStorage.getItem(STORAGE_PREFIX + 'maxSpeed') || '5';
     minDecelerationForCrashInput.value = localStorage.getItem(STORAGE_PREFIX + 'minDecel') || '25';
-    backendApiUrlInput.value = localStorage.getItem(STORAGE_PREFIX + 'backendUrl') || ''; // Use new key/ID
-    // REMOVED: apiPasscodeInput.value = localStorage.getItem(STORAGE_PREFIX + 'apiPasscode') || '';
+    backendApiUrlInput.value = localStorage.getItem(STORAGE_PREFIX + 'backendUrl') || '';
 
     console.log("Settings loaded.");
 }
@@ -438,20 +464,18 @@ function getCleanedPhoneNumbers(rawString = null) {
  * Attempts to get current location and then calls the SMS sending function.
  */
 function handleTestSmsClick() {
-    // *** Update validation message to remove passcode ***
     console.log("Test SMS button clicked.");
     monitoringStatus.textContent = "Status: Initiating TEST SMS send...";
     monitoringStatus.style.color = "blue";
 
-    const backendUrl = backendApiUrlInput.value.trim(); // Use new ID
-    // REMOVED: const apiPasscode = apiPasscodeInput.value.trim();
+    const backendUrl = backendApiUrlInput.value.trim();
     const phoneNumbers = getCleanedPhoneNumbers();
 
     // Update validation message
     if (!backendUrl /* REMOVED || !apiPasscode */ || !userNameInput.value || phoneNumbers.length === 0) {
-         monitoringStatus.textContent = "Status: TEST FAILED (Missing required settings - URL, Name, or Recipients)."; // Adjusted message
+         monitoringStatus.textContent = "Status: TEST FAILED (Missing required settings - URL, Name, or Recipients).";
          monitoringStatus.style.color = "red";
-         alert("Please ensure User Name, Recipients, and Backend API URL are set and saved before testing."); // Adjusted alert
+         alert("Please ensure User Name, Recipients, and Backend API URL are set and saved before testing.");
          return;
     }
 
@@ -474,4 +498,3 @@ function handleTestSmsClick() {
         { enableHighAccuracy: true, timeout: LOCATION_TIMEOUT, maximumAge: 0 }
     );
 }
-// --- End Test Button Handler ---
