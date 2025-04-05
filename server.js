@@ -7,10 +7,7 @@ const app = express();
 const port = process.env.PORT || 3000;
 
 // --- Middleware ---
-const frontendOrigin = 'http://127.0.0.1:5500'; // Or your deployed frontend URL (e.g., GitHub Pages URL)
-app.use(cors({ origin: frontendOrigin })); // Allow requests from your frontend
-// For broad testing: app.use(cors());
-
+app.use(cors()); // Allow requests from your frontend
 app.use(express.json()); // Parse JSON request bodies
 
 // --- Get PhilSMS Credentials & Config ---
@@ -25,7 +22,7 @@ if (!PHIL_SMS_API_TOKEN || !PHIL_SMS_SENDER_ID) {
 }
 
 // --- PhilSMS API Endpoint ---
-const PHIL_SMS_ENDPOINT = 'https://app.philsms.com/api/v3/sms/send'; // From Docs
+const PHIL_SMS_ENDPOINT = 'https://philsms-crash-alert-backend.onrender.com'; // From Docs
 
 // --- API Endpoint the Frontend Calls ---
 app.post('/api/send-philsms', async (req, res) => { // Changed path slightly for clarity

@@ -10,7 +10,7 @@
     <title>Speed & Crash Detector Prototype</title>
 </head>
 <body>
-    <h1>[PROTOTYE] SPEED & CRASH DETECTOR</h1>
+    <h1>[PROTOTYE] SPEED & CRASH DETECTOR (using PhilSMS Backend)</h1>
     <h2>Note: Uses GPS speed for detection. SMS sending uses a backend API. GPS accuracy may vary.</h2>
 
     <div class="settings">
@@ -43,10 +43,9 @@
 
         <hr class="thin-hr">
 
-        <label for="backendApiUrl">Backend API URL:</label> <input type="url" id="backendApiUrl" placeholder="https://your-backend-service-url/api/send-sms">
-        <small>The public URL of your deployed backend function (e.g., on Netlify/Vercel/Render).</small>
-        <br>
-
+        <label for="backendApiUrl">Backend API URL:</label>
+        <input type="url" id="backendApiUrl" placeholder="https://your-backend-service-url/api/send-sms"><br>
+        <small>The public URL of your deployed backend function (e.g., on Render).</small><br>
         <button id="saveSettingsBtn">Save Settings</button>
         <p id="settingsStatus"></p>
     </div>
@@ -72,7 +71,7 @@
     <hr> <div class="test-controls">
         <h2>Testing Tools</h2>
         <button id="testSmsBtn">Test Send SMS Alert</button>
-        <p><small>Uses current saved settings (Name, Recipients, URL, Passcode) and attempts to get current location to send a test alert via the backend API.</small></p> </div>
+        <p><small>Uses current saved settings (Name, Recipients, URL) and attempts to get current location to send a test alert via the backend API.</small></p> </div>
     <div class="log-container">
         <h2>Speed Log</h2>
         <ul id="speedLog"></ul>

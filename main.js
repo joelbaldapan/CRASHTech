@@ -15,8 +15,7 @@ const minDecelerationForCrashInput = document.getElementById("minDecelerationFor
 const saveSettingsBtn = document.getElementById("saveSettingsBtn");
 const settingsStatus = document.getElementById("settingsStatus");
 // *** Uses ID expected from HTML update for generic backend ***
-const backendApiUrlInput = document.getElementById("backendApiUrl"); // UPDATED ID reference
-const apiPasscodeInput = document.getElementById("apiPasscode");     // Kept ID
+const backendApiUrlInput = document.getElementById("backendApiUrl");
 
 // Crash Alert elements
 const crashAlertInfo = document.getElementById("crashAlertInfo");
@@ -68,12 +67,10 @@ function startMonitoring() {
 
     // Basic Checks
     if (!("geolocation" in navigator)) { /* ... */ return; }
-    // *** Use updated variable name for backend URL ***
     const backendUrl = backendApiUrlInput.value.trim();
-    const apiPasscode = apiPasscodeInput.value.trim();
-    // *** Update error message text ***
-    if (!userNameInput.value || !phoneNumbersInput.value || !speedLimitInput.value || !minSpeedForCrashCheckInput.value || !maxSpeedAfterCrashInput.value || !minDecelerationForCrashInput.value || !backendUrl || !apiPasscode) {
-        monitoringStatus.textContent = "Error: Please fill in ALL settings fields, including Backend API URL and Passcode."; // Generic wording
+
+    if (!userNameInput.value || !phoneNumbersInput.value || !speedLimitInput.value || !minSpeedForCrashCheckInput.value || !maxSpeedAfterCrashInput.value || !minDecelerationForCrashInput.value || !backendUrl /* REMOVED || !apiPasscode */ ) {
+        monitoringStatus.textContent = "Error: Please fill in ALL settings fields, including Backend API URL."; // Adjusted message
         settingsStatus.textContent = "Save ALL settings before starting.";
         settingsStatus.style.color = "red";
         return;
@@ -261,13 +258,11 @@ function triggerCrashAlert() {
  */
 function callBackendForSms(latitude, longitude) { // Renamed function
     // --- Read configuration from input fields ---
-    // *** Use updated variable name for backend URL ***
     const backendUrl = backendApiUrlInput.value.trim();
-    const apiPasscode = apiPasscodeInput.value.trim();
 
     // --- Validate configuration before proceeding ---
-    // *** Update error message text ***
-    if (!backendUrl || !apiPasscode) { // REMOVED passcode check logic from user request
+    // *** Update error message text and condition ***
+    if (!backendUrl /* REMOVED || !apiPasscode */ ) {
         console.error("Error: Backend API URL is missing in settings."); // Adjusted error
         monitoringStatus.textContent = "Status: CRASH DETECTED! FAILED (Missing Backend URL in settings)."; // Adjusted error
         crashLocationDisplay.textContent += "\nError: Cannot send alert. Backend API URL missing in settings."; // Adjusted error
@@ -315,7 +310,6 @@ function callBackendForSms(latitude, longitude) { // Renamed function
     const payload = {
         recipients: phoneNumbers, // Send ARRAY
         message: messageBody
-        // passcode: apiPasscode // REMOVED as per user request
     };
 
     fetch(backendUrl, { // Use generic backend URL
@@ -339,7 +333,6 @@ function callBackendForSms(latitude, longitude) { // Renamed function
         // Process success data (Adapt based on your actual backend response structure)
         console.log('Backend API response:', data);
         let successes = 0; let failures = 0;
-        // Example: Assuming backend returns { result: [...] }
         if (data && Array.isArray(data.result)) {
             data.result.forEach(item => {
                 if (item.success) successes++;
@@ -348,7 +341,6 @@ function callBackendForSms(latitude, longitude) { // Renamed function
             monitoringStatus.textContent = `Status: Alert via Server complete (${successes} sent, ${failures} failed).`;
             crashLocationDisplay.textContent += `\nServer confirmation: Attempted ${successes + failures} messages. ${successes} success, ${failures} failed.`;
         }
-        // Example: Handling simpler success like { success: true, message: "..." }
         else if (data && data.success) {
              monitoringStatus.textContent = `Status: Alert via Server complete.`;
              crashLocationDisplay.textContent += `\nServer confirmation: ${data.message || 'Alert request processed.'}`;
@@ -482,3 +474,4 @@ function handleTestSmsClick() {
         { enableHighAccuracy: true, timeout: LOCATION_TIMEOUT, maximumAge: 0 }
     );
 }
+// --- End Test Button Handler ---
