@@ -1,6 +1,3 @@
-// main.js - Complete Frontend Code using Twilio Function for SMS
-// Configured via UI inputs instead of hardcoded constants
-
 // --- DOM Elements ---
 const startBtn = document.getElementById("startBtn");
 const stopBtn = document.getElementById("stopBtn");
@@ -17,16 +14,13 @@ const maxSpeedAfterCrashInput = document.getElementById("maxSpeedAfterCrash");
 const minDecelerationForCrashInput = document.getElementById("minDecelerationForCrash");
 const saveSettingsBtn = document.getElementById("saveSettingsBtn");
 const settingsStatus = document.getElementById("settingsStatus");
-
-// Inputs for Twilio config
 const twilioFunctionUrlInput = document.getElementById("twilioFunctionUrl");
 const apiPasscodeInput = document.getElementById("apiPasscode");
-
 
 // Crash Alert elements
 const crashAlertInfo = document.getElementById("crashAlertInfo");
 const crashLocationDisplay = document.getElementById("crashLocation");
-const smsLink = document.getElementById("smsLink"); // Kept for potential fallback UI
+const smsLink = document.getElementById("smsLink");
 const resetCrashBtn = document.getElementById("resetCrashBtn");
 const speedAlertSound = document.getElementById("speedAlertSound");
 
@@ -38,7 +32,6 @@ let crashDetected = false;
 let isSpeeding = false;
 
 // --- Constants ---
-// REMOVED hardcoded URL and Passcode constants
 const LOCATION_TIMEOUT = 15000;
 const GEOLOCATION_OPTIONS = {
     enableHighAccuracy: true,
@@ -46,10 +39,10 @@ const GEOLOCATION_OPTIONS = {
     timeout: 10000
 };
 const MAX_LOG_ENTRIES = 100;
-const STORAGE_PREFIX = 'crashDetector_'; // Prefix for localStorage keys
+const STORAGE_PREFIX = 'crashDetector_';
 
 // --- Initialization ---
-loadSettings(); // Load saved settings on page load
+loadSettings();
 
 // --- Event Listeners ---
 startBtn.addEventListener("click", startMonitoring);
@@ -64,17 +57,14 @@ function startMonitoring() {
 
     // Basic Checks
     if (!("geolocation" in navigator)) { /* ... */ return; }
-    // Check if essential settings AND Twilio config have values
     const functionUrl = twilioFunctionUrlInput.value.trim();
-    const apiPasscode = apiPasscodeInput.value.trim(); // Get passcode trim only, might be sensitive to spaces?
+    const apiPasscode = apiPasscodeInput.value.trim();
     if (!userNameInput.value || !phoneNumbersInput.value || !speedLimitInput.value || !minSpeedForCrashCheckInput.value || !maxSpeedAfterCrashInput.value || !minDecelerationForCrashInput.value || !functionUrl || !apiPasscode) {
         monitoringStatus.textContent = "Error: Please fill in ALL settings fields, including Twilio URL and Passcode.";
         settingsStatus.textContent = "Save ALL settings before starting.";
         settingsStatus.style.color = "red";
-        // Optionally focus the first empty required field
         return;
     }
-    // Basic URL format check (optional but helpful)
     try {
        new URL(functionUrl);
     } catch (_) {
@@ -84,7 +74,6 @@ function startMonitoring() {
        return;
     }
 
-
     // Reset state and UI
     monitoringStatus.textContent = "Status: Starting...";
     monitoringStatus.style.color = "";
@@ -92,7 +81,7 @@ function startMonitoring() {
     isSpeeding = false;
     display.style.color = '';
     crashAlertInfo.style.display = 'none';
-    previousSpeedKmH = 0;
+    previousSpeedKmH = 0; // Reset previous speed state for log difference calculation
     if (speedLog) speedLog.innerHTML = "";
 
     // Start Geolocation Watch
@@ -134,22 +123,40 @@ function handlePositionUpdate(position) {
     const currentSpeedMPS = position.coords.speed;
     const timestamp = position.timestamp;
     let currentSpeedKmH = 0;
-    let speedText = "Speed: N/A";
+    let speedText = "Speed: N/A"; // Base text for main display
+    let speedValueText = "N/A"; // Just the value part for the log
 
     if (currentSpeedMPS !== null && currentSpeedMPS >= 0) {
         currentSpeedKmH = currentSpeedMPS * 3.6;
-        speedText = `Speed: ${currentSpeedKmH.toFixed(1)} km/h`;
+        speedValueText = `${currentSpeedKmH.toFixed(1)} km/h`; // Store value with units
+        speedText = `Speed: ${speedValueText}`; // Update main display text
     }
     display.textContent = speedText;
 
     // --- Speed Log Logic ---
     if (speedLog) {
         const currentTime = new Date(timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+
+        let differenceText = "";
+        // Show difference only if the previous reading was valid (not initial 0) AND current reading is valid
+        if (previousSpeedKmH !== 0 && currentSpeedMPS !== null) {
+             const speedDifference = currentSpeedKmH - previousSpeedKmH;
+             // Format the difference with a sign (+ or -) and one decimal place
+             differenceText = ` (${speedDifference >= 0 ? '+' : ''}${speedDifference.toFixed(1)} km/h)`; // Added space before parenthesis
+        } else if (currentSpeedMPS !== null && previousSpeedKmH === 0) {
+             // First valid reading since monitoring started or since last invalid reading
+             differenceText = " (Start)"; // Indicate the reference point
+        }
+        // If currentSpeedMPS is null, differenceText remains ""
+
+        // Limit log entries
         while (speedLog.children.length >= MAX_LOG_ENTRIES) {
             speedLog.removeChild(speedLog.firstChild);
         }
+
         const listItem = document.createElement("li");
-        listItem.textContent = `${currentTime} - ${speedText}`;
+        // Combine time, speed value text, and the calculated difference text
+        listItem.textContent = `${currentTime} - ${speedValueText}${differenceText}`; // Append difference to the log entry
         speedLog.appendChild(listItem);
     }
     // --- End Speed Log Logic ---
@@ -193,6 +200,7 @@ function handlePositionUpdate(position) {
     }
     // --- End Crash Detection Logic ---
 
+    // Update previousSpeedKmH for the *next* calculation, *only if* current reading was valid.
     if (currentSpeedMPS !== null) {
        previousSpeedKmH = currentSpeedKmH;
     }
@@ -276,7 +284,7 @@ function callTwilioFunctionForSms(latitude, longitude) {
     let locationText = "an unknown location (location services failed or denied)";
     if (latitude !== null && longitude !== null) {
         locationText = `location Lat: ${latitude.toFixed(5)}, Lon: ${longitude.toFixed(5)}`;
-        const googleMapsLink = `https://www.google.com/maps?q=${latitude},${longitude}`;
+        const googleMapsLink = `https://www.google.com/maps?q=${latitude},${longitude}`; // Use standard Google Maps link
         crashLocationDisplay.innerHTML = `Location: ${locationText} (<a href="${googleMapsLink}" target="_blank" rel="noopener noreferrer">View Map</a>)`;
     } else {
          crashLocationDisplay.textContent = `Location: Unknown`;
@@ -356,13 +364,12 @@ function resetCrashAlert() {
        stopBtn.disabled = true;
        startBtn.disabled = false;
     } else if (isMonitoring) {
-        monitoringStatus.textContent = "Status: Monitoring speed...";
+         monitoringStatus.textContent = "Status: Monitoring speed...";
     }
 }
 
 // --- Settings Persistence ---
 function saveSettings() {
-    // Get all values from inputs, including new ones
     const userName = userNameInput.value.trim();
     const phoneNumbersRaw = phoneNumbersInput.value.trim();
     const speedLimit = speedLimitInput.value;
@@ -370,9 +377,8 @@ function saveSettings() {
     const maxSpeed = maxSpeedAfterCrashInput.value;
     const minDecel = minDecelerationForCrashInput.value;
     const functionUrl = twilioFunctionUrlInput.value.trim();
-    const apiPasscode = apiPasscodeInput.value.trim(); // Trim only for passcode
+    const apiPasscode = apiPasscodeInput.value.trim();
 
-    // Validation (ensure all fields are filled)
     if (!userName || !phoneNumbersRaw || !speedLimit || !minSpeed || !maxSpeed || !minDecel || !functionUrl || !apiPasscode) {
         settingsStatus.textContent = "Please fill in ALL setting fields.";
         settingsStatus.style.color = "red";
@@ -387,21 +393,20 @@ function saveSettings() {
         return;
     }
      try { new URL(functionUrl); } catch (_) {
-       settingsStatus.textContent = "Invalid Twilio Function URL format.";
-       settingsStatus.style.color = "red";
-       setTimeout(() => { settingsStatus.textContent = ""; }, 3000);
-        return;
-    }
+        settingsStatus.textContent = "Invalid Twilio Function URL format.";
+        settingsStatus.style.color = "red";
+        setTimeout(() => { settingsStatus.textContent = ""; }, 3000);
+         return;
+     }
 
-    // Save all values to localStorage using prefixed keys
     localStorage.setItem(STORAGE_PREFIX + 'userName', userName);
     localStorage.setItem(STORAGE_PREFIX + 'phoneNumbers', phoneNumbersRaw);
     localStorage.setItem(STORAGE_PREFIX + 'speedLimit', speedLimit);
     localStorage.setItem(STORAGE_PREFIX + 'minSpeed', minSpeed);
     localStorage.setItem(STORAGE_PREFIX + 'maxSpeed', maxSpeed);
     localStorage.setItem(STORAGE_PREFIX + 'minDecel', minDecel);
-    localStorage.setItem(STORAGE_PREFIX + 'functionUrl', functionUrl); // Save URL
-    localStorage.setItem(STORAGE_PREFIX + 'apiPasscode', apiPasscode); // Save Passcode
+    localStorage.setItem(STORAGE_PREFIX + 'functionUrl', functionUrl);
+    localStorage.setItem(STORAGE_PREFIX + 'apiPasscode', apiPasscode);
 
     settingsStatus.textContent = "Settings saved successfully!";
     settingsStatus.style.color = "green";
@@ -410,15 +415,14 @@ function saveSettings() {
 }
 
 function loadSettings() {
-    // Load all values from localStorage using prefixed keys
     userNameInput.value = localStorage.getItem(STORAGE_PREFIX + 'userName') || '';
     phoneNumbersInput.value = localStorage.getItem(STORAGE_PREFIX + 'phoneNumbers') || '';
-    speedLimitInput.value = localStorage.getItem(STORAGE_PREFIX + 'speedLimit') || '60'; // Default value
-    minSpeedForCrashCheckInput.value = localStorage.getItem(STORAGE_PREFIX + 'minSpeed') || '30'; // Default value
-    maxSpeedAfterCrashInput.value = localStorage.getItem(STORAGE_PREFIX + 'maxSpeed') || '5'; // Default value
-    minDecelerationForCrashInput.value = localStorage.getItem(STORAGE_PREFIX + 'minDecel') || '25'; // Default value
-    twilioFunctionUrlInput.value = localStorage.getItem(STORAGE_PREFIX + 'functionUrl') || ''; // Load URL
-    apiPasscodeInput.value = localStorage.getItem(STORAGE_PREFIX + 'apiPasscode') || ''; // Load Passcode
+    speedLimitInput.value = localStorage.getItem(STORAGE_PREFIX + 'speedLimit') || '60';
+    minSpeedForCrashCheckInput.value = localStorage.getItem(STORAGE_PREFIX + 'minSpeed') || '30';
+    maxSpeedAfterCrashInput.value = localStorage.getItem(STORAGE_PREFIX + 'maxSpeed') || '5';
+    minDecelerationForCrashInput.value = localStorage.getItem(STORAGE_PREFIX + 'minDecel') || '25';
+    twilioFunctionUrlInput.value = localStorage.getItem(STORAGE_PREFIX + 'functionUrl') || '';
+    apiPasscodeInput.value = localStorage.getItem(STORAGE_PREFIX + 'apiPasscode') || '';
 
     console.log("Settings loaded.");
 }
