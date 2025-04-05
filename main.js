@@ -156,7 +156,7 @@ function handlePositionUpdate(position) {
         listItem.textContent = `${currentTime} - ${speedText}`;
         speedLog.appendChild(listItem);
         // Optional: Auto-scroll to the bottom of the log
-        // speedLog.scrollTop = speedLog.scrollHeight;
+        speedLog.scrollTop = speedLog.scrollHeight;
     }
     // --- End Speed Log Logic ---
 
