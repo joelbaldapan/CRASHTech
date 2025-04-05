@@ -46,20 +46,29 @@ label {
     color: #555;
 }
 
-input[type="text"], input[type="number"] {
+/* *** MODIFIED RULE: Added input[type="url"] and input[type="password"] *** */
+input[type="text"],
+input[type="number"],
+input[type="url"],      /* Added */
+input[type="password"]  /* Added */
+{
     width: 100%; /* Full width */
     padding: 10px 12px; /* Comfortable padding */
-    margin-bottom: 5px;
+    margin-bottom: 5px; /* Reduced margin below input */
     border: 1px solid #ccc;
     border-radius: 5px;
     box-sizing: border-box; /* Include padding/border in width */
-    font-size: 1em;
+    font-size: 1em; /* Keep font size consistent */
+    /* Inherit body font by default, or set specific one */
+    /* font-family: inherit; */
     -webkit-appearance: none; /* Remove default mobile styling */
     -moz-appearance: none;
     appearance: none;
 }
+
+/* Specific rule for number input appearance */
 input[type="number"] {
-     -moz-appearance: textfield; /* Ensure number input looks like text input */
+     -moz-appearance: textfield;
 }
 /* Remove spinners for number input */
 input[type=number]::-webkit-inner-spin-button,
@@ -67,7 +76,13 @@ input[type=number]::-webkit-outer-spin-button {
   -webkit-appearance: none;
   margin: 0;
 }
-
+/* Optional: Slightly different font for URL field if desired */
+/*
+input#twilioFunctionUrl {
+  font-family: "Menlo", "Monaco", "Consolas", "Courier New", monospace;
+  font-size: 0.95em;
+}
+*/
 
 small {
     display: block;
@@ -135,6 +150,7 @@ button#stopBtn:hover:not(:disabled) {
     border-radius: 4px;
     background-color: #ecf0f1; /* Very light grey background */
     display: inline-block; /* Prevent full width */
+    word-wrap: break-word; /* Wrap long status messages */
 }
 #settingsStatus {
     margin-top: 10px;
@@ -150,14 +166,14 @@ button#stopBtn:hover:not(:disabled) {
 
 /* Speed Display States */
 #display[style*="color: orange"] { /* Speeding */
-    color: #e67e22 !important; /* Use important to override inline style if needed */
+    color: #e67e22 !important;
     font-weight: bold;
-    background-color: #fdf3e1; /* Light orange background */
+    background-color: #fdf3e1;
 }
 #display[style*="color: red"] { /* Crash */
     color: #c0392b !important;
     font-weight: bold;
-    background-color: #fbe6e4; /* Light red background */
+    background-color: #fbe6e4;
     animation: blinker 1s linear infinite;
 }
 
@@ -182,8 +198,9 @@ button#stopBtn:hover:not(:disabled) {
 }
 #crashAlertInfo p {
     margin-bottom: 10px;
+    word-wrap: break-word; /* Wrap long messages/locations */
 }
-#crashAlertInfo a#smsLink { /* Style the SMS link */
+#crashAlertInfo a#smsLink { /* Style the SMS link (if used as fallback) */
     display: inline-block;
     margin-top: 15px;
     padding: 12px 20px;
@@ -218,18 +235,30 @@ hr.thin-hr { /* Specific thin rule */
 }
 
 /* Speed Log Styling */
+.log-container {
+    margin-top: 20px;
+    padding: 15px;
+    background-color: #fff;
+    border-radius: 5px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.08); /* Use softer shadow */
+    border: 1px solid #e0e0e0;
+}
+
 .log-container h2 {
    border-bottom: none; /* Remove border for log heading */
    margin-bottom: 10px;
+   font-size: 1.2em;
+   color: #333;
 }
+
 #speedLog {
     list-style: none;
     padding: 0;
     margin: 0;
-    max-height: 250px;
-    overflow-y: auto;
+    max-height: 250px; /* Limit height and enable scrolling */
+    overflow-y: auto; /* Add scrollbar when content exceeds max-height */
     border: 1px solid #e0e0e0;
-    border-radius: 5px;
+    border-radius: 5px; /* Match container */
     background-color: #fdfdfd; /* Slightly off-white */
 }
 #speedLog li {
@@ -239,9 +268,11 @@ hr.thin-hr { /* Specific thin rule */
     color: #555;
     font-family: "Menlo", "Monaco", "Consolas", "Courier New", monospace; /* Monospace font */
     white-space: nowrap; /* Prevent wrapping */
+    overflow: hidden; /* Hide overflow */
+    text-overflow: ellipsis; /* Add ellipsis if text too long */
 }
 #speedLog li:last-child {
-    border-bottom: none;
+    border-bottom: none; /* Remove border from the last item */
 }
 #speedLog li:nth-child(even) { /* Zebra striping */
     background-color: #f8f8f8;

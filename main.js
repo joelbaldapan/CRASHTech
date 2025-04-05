@@ -1,9 +1,12 @@
+// main.js - Complete Frontend Code using Twilio Function for SMS
+// Configured via UI inputs instead of hardcoded constants
+
 // --- DOM Elements ---
 const startBtn = document.getElementById("startBtn");
 const stopBtn = document.getElementById("stopBtn");
 const monitoringStatus = document.getElementById("monitoringStatus");
 const display = document.getElementById("display");
-const speedLog = document.getElementById("speedLog"); // Speed Log UL element
+const speedLog = document.getElementById("speedLog");
 
 // Settings elements
 const userNameInput = document.getElementById("userName");
@@ -15,28 +18,35 @@ const minDecelerationForCrashInput = document.getElementById("minDecelerationFor
 const saveSettingsBtn = document.getElementById("saveSettingsBtn");
 const settingsStatus = document.getElementById("settingsStatus");
 
+// Inputs for Twilio config
+const twilioFunctionUrlInput = document.getElementById("twilioFunctionUrl");
+const apiPasscodeInput = document.getElementById("apiPasscode");
+
+
 // Crash Alert elements
 const crashAlertInfo = document.getElementById("crashAlertInfo");
 const crashLocationDisplay = document.getElementById("crashLocation");
-const smsLink = document.getElementById("smsLink");
+const smsLink = document.getElementById("smsLink"); // Kept for potential fallback UI
 const resetCrashBtn = document.getElementById("resetCrashBtn");
-const speedAlertSound = document.getElementById("speedAlertSound"); // Audio Element
+const speedAlertSound = document.getElementById("speedAlertSound");
 
 // --- State Variables ---
 let isMonitoring = false;
-let watchId = null; // Geolocation watch ID
-let previousSpeedKmH = 0; // Store the last known speed for deceleration check
-let crashDetected = false; // Flag for crash state
-let isSpeeding = false; // Track if currently exceeding speed limit
+let watchId = null;
+let previousSpeedKmH = 0;
+let crashDetected = false;
+let isSpeeding = false;
 
 // --- Constants ---
-const LOCATION_TIMEOUT = 15000; // Max time (ms) to wait for location during crash alert
+// REMOVED hardcoded URL and Passcode constants
+const LOCATION_TIMEOUT = 15000;
 const GEOLOCATION_OPTIONS = {
-    enableHighAccuracy: true, // Request high accuracy
-    maximumAge: 5000,        // Don't use cached position older than 5s for continuous tracking
-    timeout: 10000           // Give up after 10s if no position update during continuous tracking
+    enableHighAccuracy: true,
+    maximumAge: 1000,
+    timeout: 10000
 };
-const MAX_LOG_ENTRIES = 100; // Limit the number of speed log entries
+const MAX_LOG_ENTRIES = 100;
+const STORAGE_PREFIX = 'crashDetector_'; // Prefix for localStorage keys
 
 // --- Initialization ---
 loadSettings(); // Load saved settings on page load
@@ -49,424 +59,376 @@ resetCrashBtn.addEventListener("click", resetCrashAlert);
 
 // --- Core Functions ---
 
-/**
- * Starts the monitoring process: clears log, resets state, starts geolocation watch.
- */
 function startMonitoring() {
-    if (isMonitoring) return; // Prevent multiple starts
+    if (isMonitoring) return;
 
-    // Basic Checks: Ensure necessary APIs exist and settings are filled
-    if (!("geolocation" in navigator)) {
-        monitoringStatus.textContent = "Error: Geolocation API not supported.";
+    // Basic Checks
+    if (!("geolocation" in navigator)) { /* ... */ return; }
+    // Check if essential settings AND Twilio config have values
+    const functionUrl = twilioFunctionUrlInput.value.trim();
+    const apiPasscode = apiPasscodeInput.value.trim(); // Get passcode trim only, might be sensitive to spaces?
+    if (!userNameInput.value || !phoneNumbersInput.value || !speedLimitInput.value || !minSpeedForCrashCheckInput.value || !maxSpeedAfterCrashInput.value || !minDecelerationForCrashInput.value || !functionUrl || !apiPasscode) {
+        monitoringStatus.textContent = "Error: Please fill in ALL settings fields, including Twilio URL and Passcode.";
+        settingsStatus.textContent = "Save ALL settings before starting.";
+        settingsStatus.style.color = "red";
+        // Optionally focus the first empty required field
         return;
     }
-     // Check if essential settings have values
-     if (!userNameInput.value || !phoneNumbersInput.value || !speedLimitInput.value || !minSpeedForCrashCheckInput.value || !maxSpeedAfterCrashInput.value || !minDecelerationForCrashInput.value ) {
-         monitoringStatus.textContent = "Error: Please fill in all settings first.";
-         settingsStatus.textContent = "Save settings before starting.";
-         settingsStatus.style.color = "red";
-         return;
+    // Basic URL format check (optional but helpful)
+    try {
+       new URL(functionUrl);
+    } catch (_) {
+       monitoringStatus.textContent = "Error: Invalid Twilio Function URL format.";
+       settingsStatus.textContent = "Check Twilio Function URL.";
+       settingsStatus.style.color = "red";
+       return;
     }
 
-    // Reset state and UI elements
+
+    // Reset state and UI
     monitoringStatus.textContent = "Status: Starting...";
     monitoringStatus.style.color = "";
     crashDetected = false;
     isSpeeding = false;
-    display.style.color = ''; // Reset display color
-    crashAlertInfo.style.display = 'none'; // Hide crash alert box
-    previousSpeedKmH = 0; // Reset previous speed
-    if (speedLog) speedLog.innerHTML = ""; // Clear the speed log display
+    display.style.color = '';
+    crashAlertInfo.style.display = 'none';
+    previousSpeedKmH = 0;
+    if (speedLog) speedLog.innerHTML = "";
 
     // Start Geolocation Watch
     if (navigator.geolocation) {
-        // Request position updates
         watchId = navigator.geolocation.watchPosition(
-            handlePositionUpdate,       // Success callback
-            handleGeolocationError,     // Error callback
-            GEOLOCATION_OPTIONS         // Options
+            handlePositionUpdate,
+            handleGeolocationError,
+            GEOLOCATION_OPTIONS
         );
-
-        // Update UI to reflect monitoring state
         isMonitoring = true;
         startBtn.disabled = true;
         stopBtn.disabled = false;
         monitoringStatus.textContent = "Status: Monitoring speed...";
         console.log("Monitoring started with watchId:", watchId);
     } else {
-         monitoringStatus.textContent = "Error: Geolocation is not available.";
+        monitoringStatus.textContent = "Error: Geolocation is not available.";
     }
 }
 
-/**
- * Stops the monitoring process: clears geolocation watch, resets UI.
- */
 function stopMonitoring() {
-    if (!isMonitoring || watchId === null) return; // Prevent multiple stops or stopping if not started
-
-    navigator.geolocation.clearWatch(watchId); // Stop watching position
+    if (!isMonitoring || watchId === null) return;
+    navigator.geolocation.clearWatch(watchId);
     watchId = null;
-
-    // Update UI and reset state
     isMonitoring = false;
-    isSpeeding = false; // Reset speeding flag
+    isSpeeding = false;
     startBtn.disabled = false;
     stopBtn.disabled = true;
     monitoringStatus.textContent = "Status: Idle";
-    display.textContent = "Speed: 0.0 km/h"; // Reset speed display
-    display.style.color = ''; // Reset display color
-    crashAlertInfo.style.display = 'none'; // Hide crash alert if visible
+    display.textContent = "Speed: 0.0 km/h";
+    display.style.color = '';
+    crashAlertInfo.style.display = 'none';
     previousSpeedKmH = 0;
-    // Note: We don't clear the log on stop, user might want to review it.
     console.log("Monitoring stopped.");
 }
 
-/**
- * Handles successful position updates from watchPosition.
- * Updates speed display, adds to log, checks speed limit, checks for crash condition.
- */
 function handlePositionUpdate(position) {
-    if (!isMonitoring) return; // Exit if monitoring was stopped between updates
+    if (!isMonitoring) return;
 
-    const currentSpeedMPS = position.coords.speed; // Speed in meters per second from GPS
-    const timestamp = position.timestamp; // Time of the reading from GPS
+    const currentSpeedMPS = position.coords.speed;
+    const timestamp = position.timestamp;
     let currentSpeedKmH = 0;
-    let speedText = "Speed: N/A"; // Default text if speed is null
+    let speedText = "Speed: N/A";
 
-    // Calculate speed in km/h if available
-    if (currentSpeedMPS !== null && currentSpeedMPS >= 0) { // Check for valid speed
+    if (currentSpeedMPS !== null && currentSpeedMPS >= 0) {
         currentSpeedKmH = currentSpeedMPS * 3.6;
         speedText = `Speed: ${currentSpeedKmH.toFixed(1)} km/h`;
     }
-    display.textContent = speedText; // Update main speed display
+    display.textContent = speedText;
 
     // --- Speed Log Logic ---
     if (speedLog) {
-        // Format time from the position timestamp
         const currentTime = new Date(timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-
-        // Limit the number of log entries to avoid performance issues
         while (speedLog.children.length >= MAX_LOG_ENTRIES) {
-            speedLog.removeChild(speedLog.firstChild); // Remove the oldest (top) entry
+            speedLog.removeChild(speedLog.firstChild);
         }
-
-        // Create and append the new log entry
         const listItem = document.createElement("li");
-        // Use the formatted speedText which includes units or "N/A"
         listItem.textContent = `${currentTime} - ${speedText}`;
         speedLog.appendChild(listItem);
-        // Optional: Auto-scroll to the bottom of the log
-        speedLog.scrollTop = speedLog.scrollHeight;
     }
     // --- End Speed Log Logic ---
 
-
     // --- Speed Limit Alert Logic ---
-    // Only check speed limit if no crash is currently detected
     if (!crashDetected) {
-        const speedLimit = parseFloat(speedLimitInput.value); // Get limit from input
-
-        // Check if speed limit is a valid number, sound element exists, and we have a valid speed
+        const speedLimit = parseFloat(speedLimitInput.value);
         if (!isNaN(speedLimit) && speedAlertSound && currentSpeedKmH > 0) {
-            if (currentSpeedKmH > speedLimit && !isSpeeding) {
-                // Condition: Speed just exceeded the limit
-                isSpeeding = true; // Set the speeding flag
-                display.style.color = 'orange'; // Indicate speeding visually
-                speedAlertSound.play().catch(e => console.error("Audio play failed:", e)); // Play sound, catch potential errors
-                console.log(`Speed limit (${speedLimit} km/h) exceeded. Current: ${currentSpeedKmH.toFixed(1)} km/h`);
+             if (currentSpeedKmH > speedLimit && !isSpeeding) {
+                isSpeeding = true;
+                display.style.color = 'orange';
+                speedAlertSound.play().catch(e => console.error("Audio play failed:", e));
+                console.log(`Speed limit (${speedLimit} km/h) exceeded.`);
             } else if (currentSpeedKmH <= speedLimit && isSpeeding) {
-                // Condition: Speed just dropped back below the limit
-                isSpeeding = false; // Reset the speeding flag
-                display.style.color = ''; // Reset display color
-                // Optional: Explicitly stop sound if it loops (uncomment if needed)
-                // speedAlertSound.pause();
-                // speedAlertSound.currentTime = 0;
-                console.log(`Speed back below limit (${speedLimit} km/h). Current: ${currentSpeedKmH.toFixed(1)} km/h`);
+                isSpeeding = false;
+                display.style.color = '';
+                console.log(`Speed back below limit (${speedLimit} km/h).`);
             }
         } else if (isSpeeding) {
-            // Handle cases where speed becomes N/A or 0 while speeding was true
             isSpeeding = false;
             display.style.color = '';
         }
-    } // End of Speed Limit Check Block
+    }
+    // --- End Speed Limit Alert Logic ---
 
-
-    // --- Crash Detection Logic (Sudden Deceleration) ---
-    // Only check for crash if no crash is currently detected
+    // --- Crash Detection Logic ---
     if (!crashDetected) {
-        // Get crash detection thresholds from input fields
         const minSpeedBefore = parseFloat(minSpeedForCrashCheckInput.value);
         const maxSpeedAfter = parseFloat(maxSpeedAfterCrashInput.value);
         const minDeceleration = parseFloat(minDecelerationForCrashInput.value);
-        const actualDeceleration = previousSpeedKmH - currentSpeedKmH; // Calculate speed drop
-
-        // Check conditions for a potential crash event
-        if ( previousSpeedKmH > minSpeedBefore &&      // Were we going fast enough before?
-             currentSpeedKmH < maxSpeedAfter &&        // Have we slowed down significantly now?
-             actualDeceleration >= minDeceleration &&  // Was the drop in speed rapid enough?
-             currentSpeedMPS !== null                  // Ensure current speed reading is valid
-           )
+        const actualDeceleration = previousSpeedKmH - currentSpeedKmH;
+        if ( previousSpeedKmH > minSpeedBefore &&
+             currentSpeedKmH < maxSpeedAfter &&
+             actualDeceleration >= minDeceleration &&
+             currentSpeedMPS !== null )
         {
-            // Log detection details
-            console.log(`CRASH DETECTED (Sudden Stop): Speed dropped from ${previousSpeedKmH.toFixed(1)} to ${currentSpeedKmH.toFixed(1)} km/h (Drop: ${actualDeceleration.toFixed(1)} km/h)`);
-            display.style.color = 'red'; // Make speed display red to indicate crash state
-            triggerCrashAlert(); // Initiate the crash alert sequence
+            console.log(`CRASH DETECTED (Sudden Stop): Speed drop ${previousSpeedKmH.toFixed(1)} -> ${currentSpeedKmH.toFixed(1)}`);
+            display.style.color = 'red';
+            triggerCrashAlert();
         }
-    } // End of Crash Detection Block
+    }
+    // --- End Crash Detection Logic ---
 
-
-    // Store the current speed (if valid) to compare against the next update
     if (currentSpeedMPS !== null) {
        previousSpeedKmH = currentSpeedKmH;
     }
 }
 
-/**
- * Handles errors from watchPosition.
- */
 function handleGeolocationError(error) {
     monitoringStatus.textContent = `Status: Geolocation Error (${error.code}: ${error.message})`;
     display.textContent = "Speed: Error";
-    display.style.color = ''; // Reset color on error
-    isSpeeding = false; // Reset speeding state
+    display.style.color = '';
+    isSpeeding = false;
     console.error("Geolocation Error:", error);
-
-    // Handle specific errors
-    if (error.code === 1) { // PERMISSION_DENIED
-        stopMonitoring(); // Stop monitoring if permission is denied
-         monitoringStatus.textContent = "Status: Geolocation Permission Denied. Monitoring stopped.";
+    if (error.code === 1) {
+        stopMonitoring();
+        monitoringStatus.textContent = "Status: Geolocation Permission Denied. Monitoring stopped.";
     }
-    // Could add handling for POSITION_UNAVAILABLE (code 2) or TIMEOUT (code 3) if needed
 }
 
-/**
- * Initiates the crash alert process: sets flags, gets location, prepares SMS link.
- */
 function triggerCrashAlert() {
-    if (crashDetected) return; // Prevent triggering multiple times for one event
+    if (crashDetected) return;
+    crashDetected = true;
+    isSpeeding = false;
+    display.style.color = 'red';
+    monitoringStatus.textContent = "Status: CRASH DETECTED! Processing alert...";
+    monitoringStatus.style.color = "red";
 
-    crashDetected = true; // Set the global crash flag
-    isSpeeding = false; // Ensure speeding state is off during crash alert
-    display.style.color = 'red'; // Ensure display stays red
-    monitoringStatus.textContent = "Status: CRASH DETECTED!";
-    monitoringStatus.style.color = "red"; // Make status text red
-
-    // Optional: Stop the speed alert sound if it was playing
-    // if (speedAlertSound) { speedAlertSound.pause(); speedAlertSound.currentTime = 0; }
-
-    // Show the crash alert UI section
     crashAlertInfo.style.display = 'block';
-    crashLocationDisplay.textContent = "Fetching location..."; // Initial message
-    smsLink.style.display = 'none'; // Hide SMS link until location is ready
+    crashLocationDisplay.textContent = "Fetching location for alert...";
+    smsLink.style.display = 'none'; // Hide manual link
 
-    // Get a fresh, high-accuracy location reading *now* for the alert message
     navigator.geolocation.getCurrentPosition(
         (position) => {
-            // Location successfully obtained
             const { latitude, longitude } = position.coords;
-            const locationString = `Lat: ${latitude.toFixed(5)}, Lon: ${longitude.toFixed(5)}`;
-            // Create a Google Maps link for convenience
-            const googleMapsLink = `https://www.google.com/maps?q=${latitude},${longitude}`;
-            // Update the UI with the location and map link
-            crashLocationDisplay.innerHTML = `Location: ${locationString} (<a href="${googleMapsLink}" target="_blank" rel="noopener noreferrer">View Map</a>)`;
-            console.log("Location fetched for crash:", locationString);
-
-            // Now that we have location, prepare the SMS link
-            prepareSmsLink(latitude, longitude);
+            callTwilioFunctionForSms(latitude, longitude); // Call the function that calls the API
         },
         (error) => {
-            // Failed to get location for the alert
             crashLocationDisplay.textContent = `Location: Error fetching location (${error.message})`;
             console.error("Geolocation error on crash:", error);
-            // Still prepare the SMS link, but indicate location is unknown
-            prepareSmsLink(null, null);
+            callTwilioFunctionForSms(null, null); // Call API even if location failed
         },
-        { // Options for this specific, one-time location request
-            enableHighAccuracy: true,   // Prioritize accuracy
-            timeout: LOCATION_TIMEOUT,  // Set a timeout
-            maximumAge: 0               // Force a fresh reading, ignore cache
-        }
+        { enableHighAccuracy: true, timeout: LOCATION_TIMEOUT, maximumAge: 0 }
     );
 }
 
-/**
- * Prepares the SMS link (sms: URI) with recipient numbers and the message body.
- * @param {number|null} latitude - The latitude coordinate, or null if unavailable.
- * @param {number|null} longitude - The longitude coordinate, or null if unavailable.
- */
-function prepareSmsLink(latitude, longitude) {
-    const userName = userNameInput.value.trim() || "User"; // Get user name or use default
-    const phoneNumbers = getCleanedPhoneNumbers(); // Get validated phone numbers
 
-    // Handle case where no valid numbers are saved
-    if (phoneNumbers.length === 0) {
-        smsLink.textContent = "No emergency contacts saved!";
-        // Style the link to appear disabled
-        smsLink.style.pointerEvents = 'none';
-        smsLink.style.backgroundColor = 'grey';
-        smsLink.style.color = 'white';
-        smsLink.style.padding = '12px 20px';
-        smsLink.style.borderRadius = '5px';
-        smsLink.style.textDecoration = 'none';
-        smsLink.style.display = 'inline-block';
-        return; // Exit function
+/**
+ * Calls the Twilio Function endpoint (URL read from input) to send SMS.
+ * @param {number|null} latitude
+ * @param {number|null} longitude
+ */
+function callTwilioFunctionForSms(latitude, longitude) {
+    // --- Read configuration from input fields ---
+    const functionUrl = twilioFunctionUrlInput.value.trim();
+    const apiPasscode = apiPasscodeInput.value.trim(); // Read passcode trim only
+
+    // --- Validate configuration before proceeding ---
+    if (!functionUrl || !apiPasscode) {
+        console.error("Error: Twilio Function URL or API Passcode is missing in settings.");
+        monitoringStatus.textContent = "Status: CRASH DETECTED! FAILED (Missing URL/Passcode in settings).";
+        crashLocationDisplay.textContent += "\nError: Cannot send alert. Twilio URL or Passcode missing in settings.";
+        return; // Stop if config is missing
+    }
+    try { new URL(functionUrl); } catch (_) {
+       monitoringStatus.textContent = "Status: CRASH DETECTED! FAILED (Invalid URL format in settings).";
+       crashLocationDisplay.textContent += "\nError: Cannot send alert. Invalid Twilio Function URL format in settings.";
+       return;
     }
 
-    // Construct the location part of the message
-    let locationText = "an unknown location (location services failed)";
+    // --- Proceed with preparing data ---
+    const userName = userNameInput.value.trim() || "User";
+    const phoneNumbers = getCleanedPhoneNumbers();
+
+    if (phoneNumbers.length === 0) {
+        crashLocationDisplay.textContent = (latitude !== null ? `Location: Lat: ${latitude.toFixed(5)}, Lon: ${longitude.toFixed(5)}` : 'Location: Unknown') +
+                                           "\nError: No emergency contacts saved to notify.";
+        monitoringStatus.textContent = "Status: CRASH DETECTED! No contacts to alert.";
+        console.error("Cannot send SMS via Twilio Function: No valid phone numbers saved.");
+        return;
+    }
+
+    // Update location display
+    let locationText = "an unknown location (location services failed or denied)";
     if (latitude !== null && longitude !== null) {
         locationText = `location Lat: ${latitude.toFixed(5)}, Lon: ${longitude.toFixed(5)}`;
-        // Optional: Include map link directly in SMS body (can make it long)
-        // locationText += ` (Map: https://www.google.com/maps?q=${latitude},${longitude})`;
+        const googleMapsLink = `https://www.google.com/maps?q=${latitude},${longitude}`;
+        crashLocationDisplay.innerHTML = `Location: ${locationText} (<a href="${googleMapsLink}" target="_blank" rel="noopener noreferrer">View Map</a>)`;
+    } else {
+         crashLocationDisplay.textContent = `Location: Unknown`;
     }
 
-    // Construct the full SMS message body
-    // Updated current date to include year: April 6, 2025
-    const messageBody = `This is an automatic crash detection alert from ${userName}'s phone. A potential crash (sudden stop) has been detected around ${new Date().toLocaleTimeString()} on April 6, 2025 at ${locationText}. Please contact emergency services or check on them immediately.`;
+    // Construct message body
+    const now = new Date();
+    const dateOptions = { timeZone: 'Asia/Manila', year: 'numeric', month: 'long', day: 'numeric' };
+    const timeOptions = { timeZone: 'Asia/Manila', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true };
+    const currentDateTime = `${now.toLocaleDateString('en-US', dateOptions)} at ${now.toLocaleTimeString('en-US', timeOptions)} (Philippine Time)`;
+    const messageBody = `Automatic Crash Detection Alert from ${userName}'s phone. Potential crash detected near ${currentDateTime} at ${locationText}. Please contact emergency services or check on them immediately.`;
 
-    // Format for the sms: URI scheme
-    const encodedBody = encodeURIComponent(messageBody); // Ensure special characters work
-    const numbersString = phoneNumbers.join(','); // Comma-separate numbers for the URI
+    // --- Call Twilio Function ---
+    console.log(`Sending data to Twilio Function: ${functionUrl}`);
+    monitoringStatus.textContent = "Status: CRASH DETECTED! Sending alert via Twilio...";
 
-    // --- Set up the SMS Link (Manual Send Trigger) ---
-    smsLink.href = `sms:${numbersString}?body=${encodedBody}`;
-    smsLink.textContent = "Tap Here to SEND Emergency SMS";
-    // Apply necessary styles to make the link visible and styled as a button
-    smsLink.style.display = 'inline-block';
-    smsLink.style.marginTop = '15px';
-    smsLink.style.padding = '12px 20px';
-    smsLink.style.backgroundColor = 'red';
-    smsLink.style.color = 'white';
-    smsLink.style.textDecoration = 'none';
-    smsLink.style.borderRadius = '5px';
-    smsLink.style.fontWeight = 'bold';
-    smsLink.style.textAlign = 'center';
-    smsLink.style.pointerEvents = 'auto'; // Make it clickable
+    const payload = {
+        recipients: phoneNumbers.join(','), // Send as comma-separated STRING
+        message: messageBody,
+        passcode: apiPasscode               // Send the passcode read from input
+    };
 
-    console.log("SMS link prepared for:", numbersString);
-
-    // --- Backend Call Placeholder ---
-    // If implementing automatic sending later, the API call would go here.
-    /*
-    sendCrashDataToBackend({
-        userName: userName, recipients: phoneNumbers, latitude: latitude, longitude: longitude, message: messageBody
+    fetch(functionUrl, { // Use URL from input
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', },
+        body: JSON.stringify(payload),
+    })
+    .then(response => {
+        if (!response.ok) {
+            return response.text().then(text => {
+                // Check specifically for passcode error text if function sends it that way
+                if (response.status === 401 || (text && text.toLowerCase().includes('invalid passcode'))) {
+                     throw new Error(`Authentication failed: Invalid Passcode provided.`);
+                }
+                throw new Error(`Twilio Function error ${response.status}: ${text || response.statusText}`);
+            });
+        }
+        return response.json();
+    })
+    .then(data => {
+        console.log('Twilio Function response:', data);
+        let successes = 0;
+        let failures = 0;
+        if (data && Array.isArray(data.result)) {
+            data.result.forEach(item => {
+                if (item.success) successes++;
+                else {
+                    failures++;
+                    console.error(`Failed SMS to ${item.number}: ${item.error}`);
+                }
+            });
+            monitoringStatus.textContent = `Status: CRASH DETECTED! Alert via Twilio complete (${successes} sent, ${failures} failed).`;
+            crashLocationDisplay.textContent += `\nTwilio confirmation: Attempted ${successes + failures} messages. ${successes} success, ${failures} failed.`;
+        } else {
+             throw new Error('Received unexpected response format from Twilio Function.');
+        }
+    })
+    .catch(error => {
+        console.error('Error calling Twilio Function:', error);
+        monitoringStatus.textContent = "Status: CRASH DETECTED! FAILED to send alert via Twilio.";
+        monitoringStatus.style.color = "red";
+        crashLocationDisplay.textContent += `\nError: Could not send automatic alert (${error.message}). Notify contacts manually if possible.`;
     });
-    */
 }
 
-/* // Placeholder for backend function concept
-function sendCrashDataToBackend(payload) {
-    console.log("Sending data to backend (not implemented):", payload);
-    // Example: fetch('/api/send-crash-sms', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(payload) });
-}
-*/
 
-
-/**
- * Resets the crash alert state and UI elements.
- */
 function resetCrashAlert() {
-    crashDetected = false; // Clear the crash flag
-    crashAlertInfo.style.display = 'none'; // Hide the alert box
-    smsLink.href = '#'; // Clear SMS link href
-    smsLink.style.display = 'none'; // Hide SMS link
-    monitoringStatus.textContent = isMonitoring ? "Status: Monitoring speed..." : "Status: Idle"; // Reset status text
-    monitoringStatus.style.color = ""; // Reset status text color
-    display.style.color = ''; // Reset display color (speeding state will be re-evaluated if monitoring)
-    isSpeeding = false; // Explicitly reset speeding state
-    previousSpeedKmH = 0; // Reset speed memory
+    crashDetected = false;
+    crashAlertInfo.style.display = 'none';
+    monitoringStatus.textContent = isMonitoring ? "Status: Monitoring speed..." : "Status: Idle";
+    monitoringStatus.style.color = "";
+    display.style.color = '';
+    isSpeeding = false;
+    previousSpeedKmH = 0;
     console.log("Crash alert reset.");
-
-    // Ensure button states are correct after reset
-    if (!isMonitoring && watchId === null) { // If was stopped before/during crash
+    if (!isMonitoring && watchId === null) {
        stopBtn.disabled = true;
        startBtn.disabled = false;
-    } else if (isMonitoring) { // If still monitoring
-         monitoringStatus.textContent = "Status: Monitoring speed..."; // Re-affirm monitoring state text
+    } else if (isMonitoring) {
+        monitoringStatus.textContent = "Status: Monitoring speed...";
     }
 }
 
-
 // --- Settings Persistence ---
-
-/**
- * Saves current settings from input fields to localStorage.
- */
 function saveSettings() {
+    // Get all values from inputs, including new ones
     const userName = userNameInput.value.trim();
     const phoneNumbersRaw = phoneNumbersInput.value.trim();
     const speedLimit = speedLimitInput.value;
     const minSpeed = minSpeedForCrashCheckInput.value;
     const maxSpeed = maxSpeedAfterCrashInput.value;
     const minDecel = minDecelerationForCrashInput.value;
+    const functionUrl = twilioFunctionUrlInput.value.trim();
+    const apiPasscode = apiPasscodeInput.value.trim(); // Trim only for passcode
 
-    // Basic validation: Ensure fields are not empty
-    if (!userName || !phoneNumbersRaw || !speedLimit || !minSpeed || !maxSpeed || !minDecel ) {
-        settingsStatus.textContent = "Please fill in all setting fields.";
-        settingsStatus.style.color = "red";
-        setTimeout(() => { settingsStatus.textContent = ""; }, 3000); // Clear message after 3s
-        return;
-    }
-    // Validate phone numbers format
-    const phoneNumbersClean = getCleanedPhoneNumbers(phoneNumbersRaw);
-     if (phoneNumbersClean.length === 0) {
-        settingsStatus.textContent = "No valid PH phone numbers. Use 09xxxxxxxxx or +639xxxxxxxxx, comma-separated.";
+    // Validation (ensure all fields are filled)
+    if (!userName || !phoneNumbersRaw || !speedLimit || !minSpeed || !maxSpeed || !minDecel || !functionUrl || !apiPasscode) {
+        settingsStatus.textContent = "Please fill in ALL setting fields.";
         settingsStatus.style.color = "red";
         setTimeout(() => { settingsStatus.textContent = ""; }, 3000);
         return;
     }
-    // Add more specific validation for number ranges if desired
+    const phoneNumbersClean = getCleanedPhoneNumbers(phoneNumbersRaw);
+     if (phoneNumbersClean.length === 0) {
+        settingsStatus.textContent = "No valid PH phone numbers entered.";
+        settingsStatus.style.color = "red";
+        setTimeout(() => { settingsStatus.textContent = ""; }, 3000);
+        return;
+    }
+     try { new URL(functionUrl); } catch (_) {
+       settingsStatus.textContent = "Invalid Twilio Function URL format.";
+       settingsStatus.style.color = "red";
+       setTimeout(() => { settingsStatus.textContent = ""; }, 3000);
+        return;
+    }
 
-    // Save values to localStorage
-    localStorage.setItem('crashDetectorUserName', userName);
-    localStorage.setItem('crashDetectorPhoneNumbers', phoneNumbersRaw); // Store raw input for easier editing
-    localStorage.setItem('crashDetectorSpeedLimit', speedLimit);
-    localStorage.setItem('crashDetectorMinSpeed', minSpeed);
-    localStorage.setItem('crashDetectorMaxSpeed', maxSpeed);
-    localStorage.setItem('crashDetectorMinDecel', minDecel);
+    // Save all values to localStorage using prefixed keys
+    localStorage.setItem(STORAGE_PREFIX + 'userName', userName);
+    localStorage.setItem(STORAGE_PREFIX + 'phoneNumbers', phoneNumbersRaw);
+    localStorage.setItem(STORAGE_PREFIX + 'speedLimit', speedLimit);
+    localStorage.setItem(STORAGE_PREFIX + 'minSpeed', minSpeed);
+    localStorage.setItem(STORAGE_PREFIX + 'maxSpeed', maxSpeed);
+    localStorage.setItem(STORAGE_PREFIX + 'minDecel', minDecel);
+    localStorage.setItem(STORAGE_PREFIX + 'functionUrl', functionUrl); // Save URL
+    localStorage.setItem(STORAGE_PREFIX + 'apiPasscode', apiPasscode); // Save Passcode
 
-    // Provide user feedback
     settingsStatus.textContent = "Settings saved successfully!";
     settingsStatus.style.color = "green";
-    console.log("Settings saved:", { userName, phoneNumbersRaw, speedLimit, minSpeed, maxSpeed, minDecel });
-    setTimeout(() => { settingsStatus.textContent = ""; }, 3000); // Clear message
+    console.log("Settings saved (including Twilio config).");
+    setTimeout(() => { settingsStatus.textContent = ""; }, 3000);
 }
 
-/**
- * Loads settings from localStorage into the input fields on page load.
- */
 function loadSettings() {
-    const savedName = localStorage.getItem('crashDetectorUserName');
-    const savedNumbers = localStorage.getItem('crashDetectorPhoneNumbers');
-    const savedSpeedLimit = localStorage.getItem('crashDetectorSpeedLimit');
-    const savedMinSpeed = localStorage.getItem('crashDetectorMinSpeed');
-    const savedMaxSpeed = localStorage.getItem('crashDetectorMaxSpeed');
-    const savedMinDecel = localStorage.getItem('crashDetectorMinDecel');
-
-    // Populate fields if saved data exists
-    if (savedName) userNameInput.value = savedName;
-    if (savedNumbers) phoneNumbersInput.value = savedNumbers;
-    if (savedSpeedLimit) speedLimitInput.value = savedSpeedLimit;
-    if (savedMinSpeed) minSpeedForCrashCheckInput.value = savedMinSpeed;
-    if (savedMaxSpeed) maxSpeedAfterCrashInput.value = savedMaxSpeed;
-    if (savedMinDecel) minDecelerationForCrashInput.value = savedMinDecel;
+    // Load all values from localStorage using prefixed keys
+    userNameInput.value = localStorage.getItem(STORAGE_PREFIX + 'userName') || '';
+    phoneNumbersInput.value = localStorage.getItem(STORAGE_PREFIX + 'phoneNumbers') || '';
+    speedLimitInput.value = localStorage.getItem(STORAGE_PREFIX + 'speedLimit') || '60'; // Default value
+    minSpeedForCrashCheckInput.value = localStorage.getItem(STORAGE_PREFIX + 'minSpeed') || '30'; // Default value
+    maxSpeedAfterCrashInput.value = localStorage.getItem(STORAGE_PREFIX + 'maxSpeed') || '5'; // Default value
+    minDecelerationForCrashInput.value = localStorage.getItem(STORAGE_PREFIX + 'minDecel') || '25'; // Default value
+    twilioFunctionUrlInput.value = localStorage.getItem(STORAGE_PREFIX + 'functionUrl') || ''; // Load URL
+    apiPasscodeInput.value = localStorage.getItem(STORAGE_PREFIX + 'apiPasscode') || ''; // Load Passcode
 
     console.log("Settings loaded.");
 }
 
 // --- Utility Functions ---
-
-/**
- * Cleans and validates comma-separated phone numbers from input.
- * @param {string|null} rawString - The raw string from the input field, or null to read directly.
- * @returns {string[]} An array of valid Philippine phone numbers.
- */
 function getCleanedPhoneNumbers(rawString = null) {
-    const inputString = rawString === null ? phoneNumbersInput.value : rawString;
-    // Regex for PH mobile numbers: starts with 09 or +639, followed by 9 digits.
+     const inputString = rawString === null ? phoneNumbersInput.value : rawString;
     const phRegex = /^(09\d{9}|\+639\d{9})$/;
     return inputString
-        .split(',') // Split by comma
-        .map(num => num.trim()) // Remove whitespace around each number
-        .filter(num => phRegex.test(num)); // Keep only numbers matching the regex
+        .split(',')
+        .map(num => num.trim())
+        .filter(num => phRegex.test(num));
 }
