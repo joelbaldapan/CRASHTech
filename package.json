@@ -1,16 +1,18 @@
 {
-  "name": "speedtracker",
+  "name": "philsms-crash-alert-backend",
   "version": "1.0.0",
-  "description": "Tracks speed for vehicles",
-  "main": "main.js",
+  "description": "Backend server to send crash alerts via PhilSMS",
+  "main": "server.js",
   "scripts": {
+    "start": "node server.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "dotenv": "^16.4.7",
-    "twilio": "^5.5.1"
-  }
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "node-fetch": "^2.7.0"
 }
