@@ -20,9 +20,12 @@ const apiPasscodeInput = document.getElementById("apiPasscode");
 // Crash Alert elements
 const crashAlertInfo = document.getElementById("crashAlertInfo");
 const crashLocationDisplay = document.getElementById("crashLocation");
-const smsLink = document.getElementById("smsLink");
+const smsLink = document.getElementById("smsLink"); // Kept for potential fallback UI
 const resetCrashBtn = document.getElementById("resetCrashBtn");
 const speedAlertSound = document.getElementById("speedAlertSound");
+
+// Test Button Element ---
+const testSmsBtn = document.getElementById("testSmsBtn");
 
 // --- State Variables ---
 let isMonitoring = false;
@@ -39,16 +42,23 @@ const GEOLOCATION_OPTIONS = {
     timeout: 10000
 };
 const MAX_LOG_ENTRIES = 100;
-const STORAGE_PREFIX = 'crashDetector_';
+const STORAGE_PREFIX = 'crashDetector_'; // Prefix for localStorage keys
 
 // --- Initialization ---
-loadSettings();
+loadSettings(); // Load saved settings on page load
 
 // --- Event Listeners ---
 startBtn.addEventListener("click", startMonitoring);
 stopBtn.addEventListener("click", stopMonitoring);
 saveSettingsBtn.addEventListener("click", saveSettings);
 resetCrashBtn.addEventListener("click", resetCrashAlert);
+
+// Listener for Test Button ---
+if (testSmsBtn) { // Check if element exists before adding listener
+    testSmsBtn.addEventListener("click", handleTestSmsClick);
+} else {
+    console.warn("Test SMS Button element not found in HTML.");
+}
 
 // --- Core Functions ---
 
@@ -58,7 +68,7 @@ function startMonitoring() {
     // Basic Checks
     if (!("geolocation" in navigator)) { /* ... */ return; }
     const functionUrl = twilioFunctionUrlInput.value.trim();
-    const apiPasscode = apiPasscodeInput.value.trim();
+    const apiPasscode = apiPasscodeInput.value.trim(); // Get passcode trim only, might be sensitive to spaces?
     if (!userNameInput.value || !phoneNumbersInput.value || !speedLimitInput.value || !minSpeedForCrashCheckInput.value || !maxSpeedAfterCrashInput.value || !minDecelerationForCrashInput.value || !functionUrl || !apiPasscode) {
         monitoringStatus.textContent = "Error: Please fill in ALL settings fields, including Twilio URL and Passcode.";
         settingsStatus.textContent = "Save ALL settings before starting.";
@@ -141,22 +151,17 @@ function handlePositionUpdate(position) {
         // Show difference only if the previous reading was valid (not initial 0) AND current reading is valid
         if (previousSpeedKmH !== 0 && currentSpeedMPS !== null) {
              const speedDifference = currentSpeedKmH - previousSpeedKmH;
-             // Format the difference with a sign (+ or -) and one decimal place
-             differenceText = ` (${speedDifference >= 0 ? '+' : ''}${speedDifference.toFixed(1)} km/h)`; // Added space before parenthesis
+             differenceText = ` (${speedDifference >= 0 ? '+' : ''}${speedDifference.toFixed(1)} km/h)`;
         } else if (currentSpeedMPS !== null && previousSpeedKmH === 0) {
-             // First valid reading since monitoring started or since last invalid reading
-             differenceText = " (Start)"; // Indicate the reference point
+             differenceText = " (Start)";
         }
-        // If currentSpeedMPS is null, differenceText remains ""
 
-        // Limit log entries
         while (speedLog.children.length >= MAX_LOG_ENTRIES) {
             speedLog.removeChild(speedLog.firstChild);
         }
 
         const listItem = document.createElement("li");
-        // Combine time, speed value text, and the calculated difference text
-        listItem.textContent = `${currentTime} - ${speedValueText}${differenceText}`; // Append difference to the log entry
+        listItem.textContent = `${currentTime} - ${speedValueText}${differenceText}`;
         speedLog.appendChild(listItem);
     }
     // --- End Speed Log Logic ---
@@ -299,6 +304,8 @@ function callTwilioFunctionForSms(latitude, longitude) {
 
     // --- Call Twilio Function ---
     console.log(`Sending data to Twilio Function: ${functionUrl}`);
+    // Check if this call originated from crash detection or test button - affects status message slightly
+    // For simplicity, keep the "CRASH DETECTED" status updates, test button caller knows it's a test.
     monitoringStatus.textContent = "Status: CRASH DETECTED! Sending alert via Twilio...";
 
     const payload = {
@@ -315,7 +322,6 @@ function callTwilioFunctionForSms(latitude, longitude) {
     .then(response => {
         if (!response.ok) {
             return response.text().then(text => {
-                // Check specifically for passcode error text if function sends it that way
                 if (response.status === 401 || (text && text.toLowerCase().includes('invalid passcode'))) {
                      throw new Error(`Authentication failed: Invalid Passcode provided.`);
                 }
@@ -336,7 +342,8 @@ function callTwilioFunctionForSms(latitude, longitude) {
                     console.error(`Failed SMS to ${item.number}: ${item.error}`);
                 }
             });
-            monitoringStatus.textContent = `Status: CRASH DETECTED! Alert via Twilio complete (${successes} sent, ${failures} failed).`;
+            // Modify status slightly based on context if needed, or keep general
+            monitoringStatus.textContent = `Status: Alert via Twilio complete (${successes} sent, ${failures} failed).`; // More generic status
             crashLocationDisplay.textContent += `\nTwilio confirmation: Attempted ${successes + failures} messages. ${successes} success, ${failures} failed.`;
         } else {
              throw new Error('Received unexpected response format from Twilio Function.');
@@ -344,7 +351,7 @@ function callTwilioFunctionForSms(latitude, longitude) {
     })
     .catch(error => {
         console.error('Error calling Twilio Function:', error);
-        monitoringStatus.textContent = "Status: CRASH DETECTED! FAILED to send alert via Twilio.";
+        monitoringStatus.textContent = "Status: FAILED to send alert via Twilio."; // Generic failure status
         monitoringStatus.style.color = "red";
         crashLocationDisplay.textContent += `\nError: Could not send automatic alert (${error.message}). Notify contacts manually if possible.`;
     });
@@ -354,6 +361,7 @@ function callTwilioFunctionForSms(latitude, longitude) {
 function resetCrashAlert() {
     crashDetected = false;
     crashAlertInfo.style.display = 'none';
+    // Reset status properly based on whether monitoring is still active
     monitoringStatus.textContent = isMonitoring ? "Status: Monitoring speed..." : "Status: Idle";
     monitoringStatus.style.color = "";
     display.style.color = '';
@@ -435,4 +443,59 @@ function getCleanedPhoneNumbers(rawString = null) {
         .split(',')
         .map(num => num.trim())
         .filter(num => phRegex.test(num));
+}
+
+// --- ADDED: Function to handle Test Button Click ---
+/**
+ * Handles the click event for the Test SMS button.
+ * Attempts to get current location and then calls the SMS sending function.
+ */
+function handleTestSmsClick() {
+    console.log("Test SMS button clicked.");
+    monitoringStatus.textContent = "Status: Initiating TEST SMS send...";
+    monitoringStatus.style.color = "blue"; // Indicate test in status temporarily
+
+    // Check if required settings for sending are present before proceeding
+    const functionUrl = twilioFunctionUrlInput.value.trim();
+    const apiPasscode = apiPasscodeInput.value.trim(); // Use trimmed value
+    const phoneNumbers = getCleanedPhoneNumbers(); // Check recipients too
+
+    if (!functionUrl || !apiPasscode || !userNameInput.value || phoneNumbers.length === 0) {
+         monitoringStatus.textContent = "Status: TEST FAILED (Missing required settings - URL, Passcode, Name, or Recipients).";
+         monitoringStatus.style.color = "red";
+         // Use alert for more prominent feedback on failure cause
+         alert("Please ensure User Name, Recipients, Twilio Function URL, and API Passcode are set and saved before testing.");
+         // Optionally reset status after delay
+         // setTimeout(() => { monitoringStatus.textContent = isMonitoring ? "Status: Monitoring speed..." : "Status: Idle"; monitoringStatus.style.color = ""; }, 3000);
+         return;
+    }
+
+    // Show the alert info box temporarily for feedback during the test
+    // It will display location and server response info.
+    crashAlertInfo.style.display = 'block';
+    crashLocationDisplay.textContent = "Fetching location for TEST...";
+    smsLink.style.display = 'none'; // Ensure manual link stays hidden if it exists
+
+    // Get current location for the test message
+    navigator.geolocation.getCurrentPosition(
+        (position) => {
+            const { latitude, longitude } = position.coords;
+            console.log(`Location fetched for test: Lat ${latitude}, Lon ${longitude}`);
+            // Call the main SMS function with fetched coordinates
+            callTwilioFunctionForSms(latitude, longitude);
+        },
+        (error) => {
+            // Failed to get location - proceed with null coordinates
+            crashLocationDisplay.textContent = `Location: Error fetching location for test (${error.message})`;
+            console.error("Geolocation error during test:", error);
+            alert(`Could not get location for test (${error.message}). Proceeding without coordinates.`);
+            // Call the main SMS function with null coordinates
+            callTwilioFunctionForSms(null, null);
+        },
+        { // Options for test location request
+            enableHighAccuracy: true, // Try for accuracy
+            timeout: LOCATION_TIMEOUT, // Use same timeout
+            maximumAge: 0 // Force fresh reading
+        }
+    );
 }
