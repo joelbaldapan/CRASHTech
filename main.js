@@ -162,6 +162,7 @@ function handlePositionUpdate(position) {
         const listItem = document.createElement("li");
         listItem.textContent = `${currentTime} - ${speedValueText}${differenceText}`;
         speedLog.appendChild(listItem);
+        speedLog.scrollTop = speedLog.scrollHeight; // AUTO SCROLL
     }
     // --- End Speed Log Logic ---
 
@@ -285,20 +286,36 @@ function callBackendForSms(latitude, longitude) { // Renamed function
         return;
     }
 
+    // --- Prepare location text and Map Link ---
     let locationText = "an unknown location (location services failed or denied)";
+    let googleMapsUrl = null; // Variable to hold the map URL
+
     if (latitude !== null && longitude !== null) {
+        // Create the descriptive text part and Google Maps URL for the SMS body and display link
         locationText = `location Lat: ${latitude.toFixed(5)}, Lon: ${longitude.toFixed(5)}`;
-        const googleMapsLink = `https://www.google.com/maps?q=${latitude},${longitude}`;
-        crashLocationDisplay.innerHTML = `Location: ${locationText} (<a href="${googleMapsLink}" target="_blank" rel="noopener noreferrer">View Map</a>)`;
+        googleMapsUrl = `https://www.google.com/maps?q=${latitude},${longitude}`;
+        // Update the display area with the map link for the UI
+        crashLocationDisplay.innerHTML = `Location: ${locationText} (<a href="${googleMapsUrl}" target="_blank" rel="noopener noreferrer">View Map</a>)`;
     } else {
+        // Just display Unknown location in the UI if coordinates aren't available
         crashLocationDisplay.textContent = `Location: Unknown`;
     }
 
+    // --- Construct Message Body ---
     const now = new Date();
     const dateOptions = { timeZone: 'Asia/Manila', year: 'numeric', month: 'long', day: 'numeric' };
     const timeOptions = { timeZone: 'Asia/Manila', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true };
     const currentDateTime = `${now.toLocaleDateString('en-US', dateOptions)} at ${now.toLocaleTimeString('en-US', timeOptions)} (Philippine Time)`;
-    const messageBody = `Automatic Crash Detection Alert from ${userName}'s phone. Potential crash detected near ${currentDateTime} at ${locationText}. Please contact emergency services or check on them immediately.`;
+
+    // Base message text
+    let messageBody = `⚠️ Automatic Crash Detection Alert from ${userName}'s phone. Potential crash detected near ${currentDateTime} at ${locationText}. Please contact emergency services or check on them immediately.`;
+    // const messageBody = `Automatic Crash Detection Alert from ${userName}'s phone. Potential crash detected near ${currentDateTime} at ${locationText}. Please contact emergency services or check on them immediately.`;
+
+    // Append the Google Maps Link to the message body *if* coordinates were available
+    if (googleMapsUrl) {
+        messageBody += `\n📌 Location: ${googleMapsUrl}`; // Append the link on a new line
+    }
+    // --- End Message Body Construction ---
 
     // --- Call Backend API ---
     console.log(`Sending data to Backend API: ${backendUrl}`);

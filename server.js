@@ -128,7 +128,7 @@ app.post('/api/send-philsms', async (req, res) => {
              result: [{ success: false, error: `Backend Error: ${error.message}`, number: recipientString }]
         });
     }
-}); // end app.post
+});
 
 // --- Start Server ---
 app.listen(port, '0.0.0.0', () => { // Listen on 0.0.0.0 for Render compatibility
