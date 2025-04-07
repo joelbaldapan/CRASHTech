@@ -130,23 +130,31 @@ function stopMonitoring() {
 function handlePositionUpdate(position) {
     if (!isMonitoring) return;
 
-    const currentSpeedMPS = position.coords.speed;
+    // Destructure coordinates and speed for easier access
+    const { latitude, longitude, speed: currentSpeedMPS } = position.coords;
     const timestamp = position.timestamp;
     let currentSpeedKmH = 0;
     let speedText = "Speed: N/A"; // Base text for main display
     let speedValueText = "N/A"; // Just the value part for the log
 
+    // Calculate and format speed if available
     if (currentSpeedMPS !== null && currentSpeedMPS >= 0) {
         currentSpeedKmH = currentSpeedMPS * 3.6;
         speedValueText = `${currentSpeedKmH.toFixed(1)} km/h`; // Store value with units
         speedText = `Speed: ${speedValueText}`; // Update main display text
     }
+
+    // Append coordinates if available
+    if (latitude !== null && longitude !== null) {
+        speedText += ` (Lat: ${latitude.toFixed(5)}, Lon: ${longitude.toFixed(5)})`;
+    }
+
+    // Update the main display with speed and potentially coordinates
     display.textContent = speedText;
 
-    // --- Speed Log Logic ---
+    // --- Speed Log Logic (No changes needed here) ---
     if (speedLog) {
         const currentTime = new Date(timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-
         let differenceText = "";
         if (previousSpeedKmH !== 0 && currentSpeedMPS !== null) {
              const speedDifference = currentSpeedKmH - previousSpeedKmH;
@@ -154,13 +162,11 @@ function handlePositionUpdate(position) {
         } else if (currentSpeedMPS !== null && previousSpeedKmH === 0) {
              differenceText = " (Start)";
         }
-
         while (speedLog.children.length >= MAX_LOG_ENTRIES) {
             speedLog.removeChild(speedLog.firstChild);
         }
-
         const listItem = document.createElement("li");
-        listItem.textContent = `${currentTime} - ${speedValueText}${differenceText}`;
+        listItem.textContent = `${currentTime} - ${speedValueText}${differenceText}`; // Log only time and speed value/diff
         speedLog.appendChild(listItem);
         speedLog.scrollTop = speedLog.scrollHeight; // AUTO SCROLL
     }
@@ -291,8 +297,9 @@ function callBackendForSms(latitude, longitude) { // Renamed function
     let googleMapsUrl = null; // Variable to hold the map URL
 
     if (latitude !== null && longitude !== null) {
-        // Create the descriptive text part and Google Maps URL for the SMS body and display link
+        // Create the descriptive text part
         locationText = `location Lat: ${latitude.toFixed(5)}, Lon: ${longitude.toFixed(5)}`;
+        // Create the Google Maps URL for the SMS body and display link
         googleMapsUrl = `https://www.google.com/maps?q=${latitude},${longitude}`;
         // Update the display area with the map link for the UI
         crashLocationDisplay.innerHTML = `Location: ${locationText} (<a href="${googleMapsUrl}" target="_blank" rel="noopener noreferrer">View Map</a>)`;
@@ -309,13 +316,13 @@ function callBackendForSms(latitude, longitude) { // Renamed function
 
     // Base message text
     let messageBody = `⚠️ Automatic Crash Detection Alert from ${userName}'s phone. Potential crash detected near ${currentDateTime} at ${locationText}. Please contact emergency services or check on them immediately.`;
-    // const messageBody = `Automatic Crash Detection Alert from ${userName}'s phone. Potential crash detected near ${currentDateTime} at ${locationText}. Please contact emergency services or check on them immediately.`;
 
     // Append the Google Maps Link to the message body *if* coordinates were available
     if (googleMapsUrl) {
         messageBody += `\n📌 Location: ${googleMapsUrl}`; // Append the link on a new line
     }
     // --- End Message Body Construction ---
+
 
     // --- Call Backend API ---
     console.log(`Sending data to Backend API: ${backendUrl}`);
@@ -333,76 +340,64 @@ function callBackendForSms(latitude, longitude) { // Renamed function
     })
     .then(response => {
         // *** Parse JSON first, then check response.ok ***
-        // This makes extracting the error message from the body more reliable
         return response.json().then(data => { // Always try parsing JSON
             if (!response.ok) {
-                // Now 'data' holds the parsed error JSON (or would have failed in .catch below)
                 let backendErrorMessage = 'Unknown backend error'; // Default message
-                // Check for the specific nested error structure from PhilSMS via backend
                 if (data && data.result && Array.isArray(data.result) && data.result.length > 0 && data.result[0].error) {
                     backendErrorMessage = data.result[0].error;
                 }
-                // Check for the backend's own validation error structure
                 else if (data && data.error) {
                     backendErrorMessage = data.error;
                 }
-                // Fallback if backend uses a top-level 'message' field for errors
                 else if (data && data.message) {
                     backendErrorMessage = data.message;
                 }
-                // Throw an error with the specific message extracted
                 throw new Error(`${backendErrorMessage}`); // Simplified error message for display
             }
-            // If response was ok, return the parsed success data
-            return data;
-        // Handle cases where the response body wasn't valid JSON *at all*
+            return data; // If response was ok, return the parsed success data
         }).catch(parseOrLogicError => {
-            // If the error is because we threw it above, re-throw it for the final catch
             if (parseOrLogicError instanceof Error && parseOrLogicError.message.startsWith('Backend error') || parseOrLogicError.message.includes('PhilSMS Error') || parseOrLogicError.message.includes('validation error')) {
                  throw parseOrLogicError;
             }
-            // Otherwise, it was likely a JSON parsing error
             console.error("Failed to parse backend response or logic error:", parseOrLogicError);
-            // Throw a new error indicating a non-JSON response or unexpected structure
             throw new Error(`Backend responded with status ${response.status} but failed to parse response or process error structure.`);
         });
     })
     .then(data => {
-        // Process success data (Adapt based on your actual backend response structure)
+        // Process success data
         console.log('Backend API response:', data);
         let successes = 0; let failures = 0;
-        // Check the structure your backend sends on success
         if (data && Array.isArray(data.result)) {
              data.result.forEach(item => {
                  if (item.success) successes++;
                  else { failures++; console.error(`Failed SMS to ${item.number || 'unknown'}: ${item.error || 'Unknown error'}`); }
              });
              monitoringStatus.textContent = `Status: Alert via Server complete (${successes} sent, ${failures} failed).`;
-             // Append success info without overwriting map link
              const successText = `\nServer confirmation: Attempted ${successes + failures} messages. ${successes} success, ${failures} failed.`;
              crashLocationDisplay.appendChild(document.createTextNode(successText));
         }
-        // Handle other potential success structures if your backend varies
-        else if (data && data.status === 'success') { // e.g., if backend directly mirrors PhilSMS success
+        else if (data && data.status === 'success') {
               monitoringStatus.textContent = `Status: Alert via Server complete.`;
               const successText = `\nServer confirmation: ${data.message || 'Alert request processed.'}`;
               crashLocationDisplay.appendChild(document.createTextNode(successText));
         }
          else {
-             // Handle unexpected success format
              console.warn('Received unexpected success response format from Backend API:', data);
              throw new Error('Received unexpected success response format from Backend API.');
          }
     })
     .catch(error => {
-        // This catch block now receives the error thrown from the logic above or network errors
+        // Handle fetch/network errors or errors thrown from the logic above
         console.error('Error calling Backend API:', error);
-        // Display the specific error message extracted previously
         monitoringStatus.textContent = `Status: FAILED to send alert via server (${error.message}).`;
         monitoringStatus.style.color = "red";
-        // Append error text node to crashLocationDisplay to preserve potential map link
         const errorText = `\nError: Could not send automatic alert (${error.message}). Notify contacts manually if possible.`;
         crashLocationDisplay.appendChild(document.createTextNode(errorText));
+    })
+    .finally(() => {
+        if (testSmsBtn) {
+            testSmsBtn.disabled = false; // Re-enable test button after attempt
+        }
     });
 }
 
@@ -421,6 +416,10 @@ function resetCrashAlert() {
        startBtn.disabled = false;
     } else if (isMonitoring) {
         monitoringStatus.textContent = "Status: Monitoring speed...";
+    }
+    // Also re-enable test button if it exists, as resetting implies testing might be desired again
+    if (testSmsBtn) {
+        testSmsBtn.disabled = false;
     }
 }
 
@@ -481,6 +480,7 @@ function getCleanedPhoneNumbers(rawString = null) {
  * Attempts to get current location and then calls the SMS sending function.
  */
 function handleTestSmsClick() {
+    if (testSmsBtn) testSmsBtn.disabled = true; // Disable button immediately
     console.log("Test SMS button clicked.");
     monitoringStatus.textContent = "Status: Initiating TEST SMS send...";
     monitoringStatus.style.color = "blue";
@@ -493,6 +493,7 @@ function handleTestSmsClick() {
          monitoringStatus.textContent = "Status: TEST FAILED (Missing required settings - URL, Name, or Recipients).";
          monitoringStatus.style.color = "red";
          alert("Please ensure User Name, Recipients, and Backend API URL are set and saved before testing.");
+         if (testSmsBtn) testSmsBtn.disabled = false; // Re-enable button on validation failure
          return;
     }
 
