@@ -54,7 +54,7 @@ saveSettingsBtn.addEventListener("click", saveSettings);
 resetCrashBtn.addEventListener("click", resetCrashAlert);
 
 // Listener for Test Button ---
-if (testSmsBtn) { // Check if element exists before adding listener
+if (testSmsBtn) {
     testSmsBtn.addEventListener("click", handleTestSmsClick);
 } else {
     console.warn("Test SMS Button element not found in HTML.");
@@ -263,7 +263,7 @@ function triggerCrashAlert() {
  * @param {number|null} latitude
  * @param {number|null} longitude
  */
-function callBackendForSms(latitude, longitude) { // Renamed function
+function callBackendForSms(latitude, longitude) {
     // --- Read configuration from input fields ---
     const backendUrl = backendApiUrlInput.value.trim();
 
@@ -298,7 +298,7 @@ function callBackendForSms(latitude, longitude) { // Renamed function
 
     if (latitude !== null && longitude !== null) {
         // Create the descriptive text part
-        locationText = `location Lat: ${latitude.toFixed(5)}, Lon: ${longitude.toFixed(5)}`;
+        locationText = `Lat: ${latitude.toFixed(5)}, Lon: ${longitude.toFixed(5)}`;
         // Create the Google Maps URL for the SMS body and display link
         googleMapsUrl = `https://www.google.com/maps?q=${latitude},${longitude}`;
         // Update the display area with the map link for the UI
@@ -315,11 +315,11 @@ function callBackendForSms(latitude, longitude) { // Renamed function
     const currentDateTime = `${now.toLocaleDateString('en-US', dateOptions)} at ${now.toLocaleTimeString('en-US', timeOptions)} (Philippine Time)`;
 
     // Base message text
-    let messageBody = `⚠️ Automatic Crash Detection Alert from ${userName}'s phone. Potential crash detected near ${currentDateTime} at ${locationText}. Please contact emergency services or check on them immediately.`;
+    let messageBody = `-- ALERT: Automatic Crash Detection Alert from ${userName}'s phone. Potential crash detected! ${currentDateTime} at ${locationText}. Please contact emergency services or check on them immediately. --`;
 
     // Append the Google Maps Link to the message body *if* coordinates were available
     if (googleMapsUrl) {
-        messageBody += `\n📌 Location: ${googleMapsUrl}`; // Append the link on a new line
+        messageBody += `\n-x- LOCATION: ${googleMapsUrl} -x-`; // Append the link on a new line
     }
     // --- End Message Body Construction ---
 

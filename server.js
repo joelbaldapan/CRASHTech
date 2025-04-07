@@ -24,7 +24,6 @@ if (!PHIL_SMS_API_TOKEN || !PHIL_SMS_SENDER_ID) {
 }
 
 // --- PhilSMS API Endpoint ---
-// ***** THIS IS THE CORRECTED LINE BASED ON THE DOCUMENTATION *****
 const PHIL_SMS_ENDPOINT = 'https://app.philsms.com/api/v3/sms/send'; // Official PhilSMS API endpoint
 
 // --- API Endpoint the Frontend Calls ---
