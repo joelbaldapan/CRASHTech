@@ -14,29 +14,42 @@
 
     <div class="settings">
         <h2>Settings</h2>
+
         <label for="userName">Your Name:</label>
         <input type="text" id="userName" placeholder="e.g., Juan dela Cruz"><br>
+
         <label for="phoneNumbers">Emergency Contacts (PH numbers, comma-separated):</label>
         <input type="text" id="phoneNumbers" placeholder="e.g., 09171234567,+639287654321"><br>
         <small>Use format 09xxxxxxxxx or +639xxxxxxxxx</small><br>
+
         <label for="speedLimit">Speed Limit Alert (km/h):</label>
         <input type="number" id="speedLimit" value="60" min="1" step="5"><br>
         <small>Plays SYNNOVE WARNING!! when speed exceeds this limit.</small><br>
+
         <hr class="thin-hr">
+
         <label for="minSpeedForCrashCheck">Crash Detect: Min Speed Before Drop (km/h):</label>
         <input type="number" id="minSpeedForCrashCheck" value="30" min="10" step="5"><br>
         <small>Must be above this speed before a sudden stop is checked.</small><br>
+
         <label for="maxSpeedAfterCrash">Crash Detect: Max Speed After Drop (km/h):</label>
         <input type="number" id="maxSpeedAfterCrash" value="5" min="0" step="1"><br>
-        <small>Speed must drop below this to trigger alert.</small><br>
+        <small>Speed must drop below this during the deceleration event.</small><br>
+
         <label for="minDecelerationForCrash">Crash Detect: Min Speed Drop (km/h):</label>
         <input type="number" id="minDecelerationForCrash" value="25" min="10" step="5"><br>
-        <small>How much speed must decrease between readings.</small><br>
+        <small>How much speed must decrease between readings for the deceleration event.</small><br>
+
+        <label for="crashTimeoutInput">Crash Detect: Event Timeout (ms):</label>
+        <input type="number" id="crashTimeoutInput" value="2000" min="500" step="100"><br>
+        <small>Deceleration event and helmet impact must occur within this time (milliseconds) to trigger alert.</small><br>
+
         <hr class="thin-hr">
 
         <label for="backendApiUrlInput">Backend API URL (Base):</label>
         <input type="url" id="backendApiUrlInput" placeholder="https://your-combined-backend.onrender.com"><br>
         <small>The BASE URL of your single backend service on Render (e.g., https://my-app.onrender.com).</small><br>
+
         <button id="saveSettingsBtn">Save Settings</button>
         <p id="settingsStatus"></p>
     </div>
@@ -53,8 +66,7 @@
     </div>
 
      <div id="crashAlertInfo" style="display: none;">
-        <h2>CRASH DETECTED! (Sudden Stop)</h2>
-        <p>Attempting to prepare emergency message...</p>
+        <h2>CRASH DETECTED!</h2> <p>Attempting to prepare emergency message...</p>
         <p id="crashLocation">Fetching location...</p>
         <p><a id="smsLink" href="#" style="display: none;">Manual SMS Fallback</a></p>
          <button id="resetCrashBtn">Reset Alert</button>
