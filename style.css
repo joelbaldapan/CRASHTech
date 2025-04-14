@@ -256,7 +256,7 @@ hr.thin-hr { /* Specific thin rule */
     padding: 0;
     margin: 0;
 
-    max-height: 600px; /* Limit height and enable scrolling */
+    max-height: 2000px; /* Limit height and enable scrolling */
 
     overflow-y: auto; /* Add scrollbar when content exceeds max-height */
     border: 1px solid #e0e0e0;
