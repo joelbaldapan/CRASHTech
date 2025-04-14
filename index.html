@@ -9,7 +9,7 @@
     <title>Speed & Crash Detector Prototype</title>
 </head>
 <body>
-    <h1>[PROTOTYE] SPEED & CRASH DETECTOR (using PhilSMS Backend - though, work in progress pa.) by Joel, hi guys</h1>
+    <h1>[PROTOTYE] SPEED & CRASH DETECTOR (using PhilSMS Backend)</h1>
     <h2>Note: Uses GPS speed for detection. SMS sending uses a backend API. GPS accuracy and timing may vary.</h2>
 
     <div class="settings">
@@ -24,7 +24,7 @@
 
         <label for="speedLimit">Speed Limit Alert (km/h):</label>
         <input type="number" id="speedLimit" value="60" min="1" step="5"><br>
-        <small>Plays SYNNOVE WARNING!! when speed exceeds this limit.</small><br>
+        <small>Plays SYNNOVE WARNING!! When speed exceeds this limit.</small><br>
 
         <hr class="thin-hr">
 
@@ -48,7 +48,7 @@
 
         <label for="backendApiUrlInput">Backend API URL (Base):</label>
         <input type="url" id="backendApiUrlInput" placeholder="https://your-combined-backend.onrender.com"><br>
-        <small>The BASE URL of your single backend service on Render (e.g., https://my-app.onrender.com).</small><br>
+        <small>The BASE URL of the single backend service on Render.</small><br>
 
         <button id="saveSettingsBtn">Save Settings</button>
         <p id="settingsStatus"></p>

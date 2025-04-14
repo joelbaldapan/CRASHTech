@@ -57,7 +57,7 @@ input[type="password"]
     border: 1px solid #ccc;
     border-radius: 5px;
     box-sizing: border-box; /* Include padding/border in width */
-    font-size: 1em;
+    font-size: 16px;
     /* Inherit body font by default, or set specific one */
     font-family: inherit; /* Ensure inputs use the body font */
     -webkit-appearance: none; /* Remove default mobile styling */
