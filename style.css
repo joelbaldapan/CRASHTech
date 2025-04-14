@@ -27,7 +27,7 @@ h2 {
 }
 
 /* Container Blocks */
-.settings, .controls, .log-container, #crashAlertInfo {
+.settings, .controls, .log-container, #crashAlertInfo, .test-controls { /* Added .test-controls */
     background-color: #ffffff;
     padding: 15px 20px;
     margin-bottom: 20px;
@@ -48,7 +48,7 @@ label {
 
 input[type="text"],
 input[type="number"],
-input[type="url"],     
+input[type="url"],
 input[type="password"]
 {
     width: 100%; /* Full width */
@@ -57,12 +57,12 @@ input[type="password"]
     border: 1px solid #ccc;
     border-radius: 5px;
     box-sizing: border-box; /* Include padding/border in width */
-    font-size: 16px;
-    /* Inherit body font by default, or set specific one */
+    font-size: 16px; /* Explicit font size for mobile */
     font-family: inherit; /* Ensure inputs use the body font */
     -webkit-appearance: none; /* Remove default mobile styling */
     -moz-appearance: none;
     appearance: none;
+    line-height: normal; /* Explicit line height */
 }
 
 /* Specific rule for number input appearance */
@@ -75,13 +75,6 @@ input[type=number]::-webkit-outer-spin-button {
   -webkit-appearance: none;
   margin: 0;
 }
-/* Optional: Slightly different font for URL field if desired */
-/*
-input#twilioFunctionUrl {
-  font-family: "Menlo", "Monaco", "Consolas", "Courier New", monospace;
-  font-size: 0.95em;
-}
-*/
 
 small {
     display: block;
@@ -151,6 +144,7 @@ button#stopBtn:hover:not(:disabled) {
     background-color: #ecf0f1;
     display: inline-block; /* Prevent full width */
     word-wrap: break-word; /* Wrap long status messages */
+    transition: background-color 0.3s ease, color 0.3s ease; /* Add transition */
 }
 #settingsStatus {
     margin-top: 10px;
@@ -168,14 +162,20 @@ button#stopBtn:hover:not(:disabled) {
 #display[style*="color: orange"] {
     color: #e67e22 !important;
     font-weight: bold;
-    background-color: #fdf3e1;
+    background-color: #fdf3e1 !important; /* Use important if needed */
 }
 #display[style*="color: red"] {
     color: #c0392b !important;
     font-weight: bold;
-    background-color: #fbe6e4;
+    background-color: #fbe6e4 !important; /* Use important if needed */
     animation: blinker 1s linear infinite;
 }
+/* Style for deceleration indication */
+#display[style*="background-color: rgb(255, 221, 221)"] /* #fdd */ {
+     background-color: #fdd !important; /* Light pink */
+     /* Keep default text color unless speeding/crashed */
+}
+
 
 /* Blinker Animation */
 @keyframes blinker {
@@ -255,7 +255,9 @@ hr.thin-hr { /* Specific thin rule */
     list-style: none;
     padding: 0;
     margin: 0;
-    max-height: 250px; /* Limit height and enable scrolling */
+
+    max-height: 600px; /* Limit height and enable scrolling */
+
     overflow-y: auto; /* Add scrollbar when content exceeds max-height */
     border: 1px solid #e0e0e0;
     border-radius: 5px; /* Match container */
@@ -278,25 +280,34 @@ hr.thin-hr { /* Specific thin rule */
     background-color: #f8f8f8;
 }
 
+/* Helmet Status Display Styling */
 #helmetStatusDisplay {
     font-weight: bold;
-    margin-top: 5px;
+    margin-top: 5px; /* Reduced margin slightly */
     font-size: 1.1em;
     padding: 8px;
     border-radius: 4px;
     background-color: #ecf0f1;
     display: inline-block;
-    word-wrap: break-word; /* Wrap long status messages */
+    word-wrap: break-word;
+    transition: background-color 0.3s ease, color 0.3s ease; /* Add transition */
+    /* Default text color */
+    color: #333;
 }
 
-/* Style for when impact is detected*/
-#helmetStatusDisplay[style*="color: orange"] {
-    color: #e67e22 !important; 
-    font-weight: bold;
-    background-color: #fdf3e1;
+/* Style for when impact is detected */
+#helmetStatusDisplay[style*="background-color: rgb(221, 221, 255)"] /* #ddf */ {
+    background-color: #ddf !important; /* Light blue */
+     /* Keep default text color */
 }
+/* Style for errors or invalid data */
 #helmetStatusDisplay[style*="color: red"] {
-    color: #c0392b !important; 
+    color: #c0392b !important;
     font-weight: bold;
-    background-color: #fbe6e4; 
+    background-color: #fbe6e4 !important; /* Match crash text background */
+}
+/* Style for when URL not set */
+#helmetStatusDisplay[style*="color: grey"] {
+    color: #7f8c8d !important; /* Grey color */
+    background-color: #ecf0f1 !important; /* Keep default background */
 }

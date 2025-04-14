@@ -496,19 +496,19 @@ function handleTestSmsClick() {
     }
 
     crashAlertInfo.style.display = 'block';
-    crashLocationDisplay.textContent = "Fetching location for TEST...";
+    crashLocationDisplay.textContent = "Fetching location...";
     smsLink.style.display = 'none';
 
     navigator.geolocation.getCurrentPosition(
         (position) => {
             const { latitude, longitude } = position.coords;
-            console.log(`Location fetched for test: Lat ${latitude}, Lon ${longitude}`);
+            console.log(`Location fetched: Lat ${latitude}, Lon ${longitude}`);
             callBackendForSms(latitude, longitude);
         },
         (error) => {
-            crashLocationDisplay.textContent = `Location: Error fetching location for test (${error.message})`;
+            crashLocationDisplay.textContent = `Location: Error fetching location (${error.message})`;
             console.error("Geolocation error during test:", error);
-            alert(`Could not get location for test (${error.message}). Proceeding without coordinates.`);
+            alert(`Could not get location (${error.message}). Proceeding without coordinates.`);
             callBackendForSms(null, null);
         },
         { enableHighAccuracy: true, timeout: LOCATION_TIMEOUT, maximumAge: 0 }
