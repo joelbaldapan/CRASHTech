@@ -1,6 +1,5 @@
-// main.js
+// main.js - COMPLETE CODE
 
-// --- DOM Elements ---
 const startBtn = document.getElementById("startBtn");
 const stopBtn = document.getElementById("stopBtn");
 const monitoringStatus = document.getElementById("monitoringStatus");
@@ -27,7 +26,6 @@ const speedAlertSound = document.getElementById("speedAlertSound");
 const testSmsBtn = document.getElementById("testSmsBtn");
 const helmetStatusDisplay = document.getElementById("helmetStatusDisplay");
 
-// --- State Variables ---
 let isMonitoring = false;
 let watchId = null;
 let previousSpeedKmH = 0;
@@ -37,7 +35,6 @@ let helmetStatusIntervalId = null;
 let decelerationEventTimestamp = 0;
 let impactTimestamp = 0;
 
-// --- Constants ---
 const LOCATION_TIMEOUT = 15000;
 const GEOLOCATION_OPTIONS = {
     enableHighAccuracy: true,
@@ -47,10 +44,8 @@ const GEOLOCATION_OPTIONS = {
 const MAX_LOG_ENTRIES = 100;
 const STORAGE_PREFIX = 'crashDetector_';
 
-// --- Initialization ---
 loadSettings();
 
-// --- Event Listeners ---
 startBtn.addEventListener("click", startMonitoring);
 stopBtn.addEventListener("click", stopMonitoring);
 saveSettingsBtn.addEventListener("click", saveSettings);
@@ -58,8 +53,6 @@ resetCrashBtn.addEventListener("click", resetCrashAlert);
 if (testSmsBtn) {
     testSmsBtn.addEventListener("click", handleTestSmsClick);
 }
-
-// --- Core Functions ---
 
 function startMonitoring() {
     if (isMonitoring) return;
@@ -93,10 +86,15 @@ function startMonitoring() {
 
     monitoringStatus.textContent = "Status: Starting...";
     monitoringStatus.style.color = "";
-    if (helmetStatusDisplay) helmetStatusDisplay.textContent = "Helmet Status: Initializing...";
+    if (helmetStatusDisplay) {
+        helmetStatusDisplay.textContent = "Helmet Status: Initializing...";
+        helmetStatusDisplay.style.backgroundColor = '';
+        helmetStatusDisplay.style.color = '';
+    }
     resetCrashDetectionState();
     isSpeeding = false;
     display.style.color = '';
+    display.style.backgroundColor = '';
     crashAlertInfo.style.display = 'none';
     previousSpeedKmH = 0;
     if (speedLog) speedLog.innerHTML = "";
@@ -126,12 +124,18 @@ function stopMonitoring() {
     navigator.geolocation.clearWatch(watchId);
 
     if (helmetStatusIntervalId) { clearInterval(helmetStatusIntervalId); helmetStatusIntervalId = null; }
-    if (helmetStatusDisplay) helmetStatusDisplay.textContent = "Helmet Status: Off";
+    if (helmetStatusDisplay) {
+        helmetStatusDisplay.textContent = "Helmet Status: Off";
+        helmetStatusDisplay.style.backgroundColor = '';
+        helmetStatusDisplay.style.color = '';
+    }
 
     watchId = null; isMonitoring = false; isSpeeding = false;
     startBtn.disabled = false; stopBtn.disabled = true;
     monitoringStatus.textContent = "Status: Idle";
-    display.textContent = "Speed: 0.0 km/h"; display.style.color = '';
+    display.textContent = "Speed: 0.0 km/h";
+    display.style.color = '';
+    display.style.backgroundColor = '';
     crashAlertInfo.style.display = 'none';
     previousSpeedKmH = 0;
     resetCrashDetectionState();
@@ -159,6 +163,10 @@ function handlePositionUpdate(position) {
         speedText += ` (Lat: ${latitude.toFixed(5)}, Lon: ${longitude.toFixed(5)})`;
     }
     display.textContent = speedText;
+
+    if (!crashDetected && display.style.backgroundColor === 'rgb(255, 221, 221)') {
+         display.style.backgroundColor = '';
+    }
 
     if (speedLog) {
         const currentTime = new Date(timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
@@ -188,12 +196,12 @@ function handlePositionUpdate(position) {
                  console.log(`Speed limit (${speedLimit} km/h) exceeded.`);
              } else if (currentSpeedKmH <= speedLimit && isSpeeding) {
                  isSpeeding = false;
-                 display.style.color = '';
+                 if (display.style.color === 'orange') display.style.color = '';
                  console.log(`Speed back below limit (${speedLimit} km/h).`);
              }
         } else if (isSpeeding) {
              isSpeeding = false;
-             display.style.color = '';
+             if (display.style.color === 'orange') display.style.color = '';
         }
     }
 
@@ -208,6 +216,7 @@ function handlePositionUpdate(position) {
              actualDeceleration >= minDecel )
         {
             console.log(`Significant Deceleration Event: Speed drop ${previousSpeedKmH.toFixed(1)} -> ${currentSpeedKmH.toFixed(1)} (Decel: ${actualDeceleration.toFixed(1)} km/h)`);
+            display.style.backgroundColor = '#fdd';
             decelerationEventTimestamp = Date.now();
             checkCrashConditions();
         }
@@ -235,6 +244,9 @@ function triggerCrashAlert() {
     crashDetected = true;
     isSpeeding = false;
     display.style.color = 'red';
+    display.style.backgroundColor = '';
+    if (helmetStatusDisplay) helmetStatusDisplay.style.backgroundColor = '';
+
     monitoringStatus.textContent = "Status: CRASH DETECTED! Processing alert...";
     monitoringStatus.style.color = "red";
 
@@ -295,7 +307,7 @@ function callBackendForSms(latitude, longitude) {
 
     if (latitude !== null && longitude !== null) {
         locationText = `Lat: ${latitude.toFixed(5)}, Lon: ${longitude.toFixed(5)}`;
-        googleMapsUrl = `https://maps.google.com/?q=${latitude},${longitude}`;
+        googleMapsUrl = `https://www.google.com/maps?q=${latitude},${longitude}`; // Correct Google Maps URL
         crashLocationDisplay.innerHTML = `Location: ${locationText} (<a href="${googleMapsUrl}" target="_blank" rel="noopener noreferrer">View Map</a>)`;
     } else {
         crashLocationDisplay.textContent = `Location: Unknown`;
@@ -389,20 +401,19 @@ function resetCrashAlert() {
     monitoringStatus.textContent = isMonitoring ? "Status: Monitoring speed..." : "Status: Idle";
     monitoringStatus.style.color = "";
     display.style.color = '';
+    display.style.backgroundColor = '';
     isSpeeding = false;
+    if (helmetStatusDisplay) {
+        helmetStatusDisplay.style.color = '';
+        helmetStatusDisplay.style.backgroundColor = '';
+        if(isMonitoring) fetchHelmetStatus(); else helmetStatusDisplay.textContent = "Helmet Status: Off";
+    }
     console.log("Crash alert UI reset.");
-    if (!isMonitoring && watchId === null) {
-        stopBtn.disabled = true;
-        startBtn.disabled = false;
-    } else if (isMonitoring) {
-        monitoringStatus.textContent = "Status: Monitoring speed...";
-    }
-    if (testSmsBtn) {
-        testSmsBtn.disabled = false;
-    }
+    if (!isMonitoring && watchId === null) { stopBtn.disabled = true; startBtn.disabled = false; }
+    else if (isMonitoring) { monitoringStatus.textContent = "Status: Monitoring speed..."; }
+    if (testSmsBtn) { testSmsBtn.disabled = false; }
 }
 
-// --- Settings Persistence ---
 function saveSettings() {
     const userName = userNameInput.value.trim();
     const phoneNumbersRaw = phoneNumbersInput.value.trim();
@@ -458,17 +469,15 @@ function loadSettings() {
     console.log("Settings loaded.");
 }
 
-// --- Utility Functions ---
 function getCleanedPhoneNumbers(rawString = null) {
     const inputString = rawString === null ? phoneNumbersInput.value : rawString;
-    const phRegex = /^(09\d{9}|\+639\d{9})$/; // Regex for PH numbers starting with 09 or +639
+    const phRegex = /^(09\d{9}|\+639\d{9})$/;
     return inputString
         .split(',')
         .map(num => num.trim())
         .filter(num => phRegex.test(num));
 }
 
-// --- Function to handle Test Button Click ---
 function handleTestSmsClick() {
     if (testSmsBtn) testSmsBtn.disabled = true;
     console.log("Test SMS button clicked.");
@@ -506,8 +515,6 @@ function handleTestSmsClick() {
     );
 }
 
-
-// --- Function to fetch Helmet Status ---
 async function fetchHelmetStatus() {
     if (!backendApiUrlInput || !helmetStatusDisplay) { return; }
 
@@ -518,6 +525,11 @@ async function fetchHelmetStatus() {
              helmetStatusDisplay.style.color = 'grey';
         }
         return;
+    }
+
+     // Reset impact background indicator on new fetch if not crashed and not already indicating error
+     if (!crashDetected && helmetStatusDisplay.style.backgroundColor === 'rgb(221, 221, 255)' && helmetStatusDisplay.style.color !== 'red') {
+        helmetStatusDisplay.style.backgroundColor = '';
     }
 
     try {
@@ -541,9 +553,20 @@ async function fetchHelmetStatus() {
             let impactLocations = [];
             if (impacts[0]) impactLocations.push("Front"); if (impacts[1]) impactLocations.push("Back");
             if (impacts[2]) impactLocations.push("Left"); if (impacts[3]) impactLocations.push("Right");
-            if (impactLocations.length > 0) { statusText += `Impact (${impactLocations.join(', ')})`; helmetStatusDisplay.style.color = 'orange'; }
-            else { statusText += "No Impact Detected"; helmetStatusDisplay.style.color = ''; }
+
+            if (impactLocations.length > 0) {
+                statusText += `Impact (${impactLocations.join(', ')})`;
+                if (!crashDetected) {
+                    helmetStatusDisplay.style.backgroundColor = '#ddf'; // Light blue background
+                }
+                helmetStatusDisplay.style.color = '';
+            } else {
+                statusText += "No Impact Detected";
+                helmetStatusDisplay.style.color = '';
+                helmetStatusDisplay.style.backgroundColor = '';
+            }
             helmetStatusDisplay.textContent = statusText;
+
 
             if (!crashDetected) {
                  if (anyImpact) {
@@ -557,6 +580,7 @@ async function fetchHelmetStatus() {
             console.warn("Received unexpected data format from helmet backend:", data);
             helmetStatusDisplay.textContent = "Helmet Status: Invalid data received";
             helmetStatusDisplay.style.color = 'red';
+            helmetStatusDisplay.style.backgroundColor = '';
         }
 
     } catch (error) {
@@ -567,11 +591,10 @@ async function fetchHelmetStatus() {
         }
         helmetStatusDisplay.textContent = `Helmet Status: Error (${displayError})`;
         helmetStatusDisplay.style.color = 'red';
+        helmetStatusDisplay.style.backgroundColor = '';
     }
 }
 
-
-// --- Function to check Crash Conditions ---
 function checkCrashConditions() {
     if (crashDetected) { return; }
 
@@ -581,10 +604,12 @@ function checkCrashConditions() {
     if (decelerationEventTimestamp > 0 && (now - decelerationEventTimestamp > crashTimeout)) {
         console.log("Deceleration event timestamp expired.");
         decelerationEventTimestamp = 0;
+        if (display.style.backgroundColor === 'rgb(255, 221, 221)') { display.style.backgroundColor = ''; }
     }
     if (impactTimestamp > 0 && (now - impactTimestamp > crashTimeout)) {
         console.log("Impact event timestamp expired.");
         impactTimestamp = 0;
+        if (helmetStatusDisplay.style.backgroundColor === 'rgb(221, 221, 255)') { helmetStatusDisplay.style.backgroundColor = ''; }
     }
 
     if (decelerationEventTimestamp > 0 && impactTimestamp > 0) {
@@ -597,7 +622,5 @@ function checkCrashConditions() {
         } else {
             console.log("Deceleration and Impact occurred, but not within the timeout window of each other.");
         }
-    } else {
-        console.log(`Checking crash conditions: Decel time=${decelerationEventTimestamp}, Impact time=${impactTimestamp}. Waiting for both.`);
     }
 }
