@@ -7,24 +7,22 @@ const app = express();
 const port = process.env.PORT || 3000; // Use Render's PORT or 3000 locally
 
 // --- Middleware ---
-// Consider restricting CORS in production: cors({ origin: 'YOUR_FRONTEND_URL' })
-app.use(cors()); // Allow requests from your frontend (adjust for production)
+app.use(cors());
 app.use(express.json()); // Parse JSON request bodies
 
 // --- Get PhilSMS Credentials & Config ---
-// THESE MUST BE SET AS ENVIRONMENT VARIABLES (in .env locally, or platform settings when deployed)
-const PHIL_SMS_API_TOKEN = process.env.PHIL_SMS_API_TOKEN; // Your actual token from app.philsms.com
-const PHIL_SMS_SENDER_ID = process.env.PHIL_SMS_SENDER_ID; // Your registered Sender ID from app.philsms.com
+// SET AS ENVIRONMENT VARIABLES (.env)
+const PHIL_SMS_API_TOKEN = process.env.PHIL_SMS_API_TOKEN;
+const PHIL_SMS_SENDER_ID = process.env.PHIL_SMS_SENDER_ID;
 
 // --- Basic Configuration Check ---
 if (!PHIL_SMS_API_TOKEN || !PHIL_SMS_SENDER_ID) {
     console.error("FATAL ERROR: PHIL_SMS_API_TOKEN or PHIL_SMS_SENDER_ID missing in environment variables.");
-    // Don't crash in production ideally, maybe return an error state
     process.exit(1); // Exit if essential config is missing during startup
 }
 
 // --- PhilSMS API Endpoint ---
-const PHIL_SMS_ENDPOINT = 'https://app.philsms.com/api/v3/sms/send'; // Official PhilSMS API endpoint
+const PHIL_SMS_ENDPOINT = 'https://app.philsms.com/api/v3/sms/send';
 
 // --- API Endpoint the Frontend Calls ---
 app.post('/api/send-philsms', async (req, res) => {
@@ -68,7 +66,7 @@ app.post('/api/send-philsms', async (req, res) => {
     const requestBody = {
         recipient: recipientString,
         sender_id: PHIL_SMS_SENDER_ID,
-        type: "plain", // Use "plain" as per docs
+        type: "plain",
         message: message,
     };
 
