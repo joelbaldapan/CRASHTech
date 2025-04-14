@@ -46,11 +46,10 @@ label {
     color: #555;
 }
 
-/* *** MODIFIED RULE: Added input[type="url"] and input[type="password"] *** */
 input[type="text"],
 input[type="number"],
-input[type="url"],      /* Added */
-input[type="password"]  /* Added */
+input[type="url"],     
+input[type="password"]
 {
     width: 100%; /* Full width */
     padding: 10px 12px;
@@ -277,4 +276,27 @@ hr.thin-hr { /* Specific thin rule */
 }
 #speedLog li:nth-child(even) {
     background-color: #f8f8f8;
+}
+
+#helmetStatusDisplay {
+    font-weight: bold;
+    margin-top: 5px;
+    font-size: 1.1em;
+    padding: 8px;
+    border-radius: 4px;
+    background-color: #ecf0f1;
+    display: inline-block;
+    word-wrap: break-word; /* Wrap long status messages */
+}
+
+/* Style for when impact is detected*/
+#helmetStatusDisplay[style*="color: orange"] {
+    color: #e67e22 !important; 
+    font-weight: bold;
+    background-color: #fdf3e1;
+}
+#helmetStatusDisplay[style*="color: red"] {
+    color: #c0392b !important; 
+    font-weight: bold;
+    background-color: #fbe6e4; 
 }

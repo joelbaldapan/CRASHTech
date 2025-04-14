@@ -12,3 +12,13 @@ node_modules/
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+
+# Backend specific ignores
+backend/node_modules/
+backend/.env
+
+# Other ignores (OS files, logs, etc.)
+.DS_Store
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
