@@ -186,25 +186,52 @@ function handlePositionUpdate(position) {
         speedLog.scrollTop = speedLog.scrollHeight;
     }
 
+
     if (!crashDetected) {
         const speedLimit = parseFloat(speedLimitInput.value);
         if (!isNaN(speedLimit) && speedAlertSound && currentSpeedKmH > 0) {
-             if (currentSpeedKmH > speedLimit && !isSpeeding) {
-                 isSpeeding = true;
-                 display.style.color = 'orange';
-                 speedAlertSound.play().catch(e => console.error("Audio play failed:", e));
-                 console.log(`Speed limit (${speedLimit} km/h) exceeded.`);
-             } else if (currentSpeedKmH <= speedLimit && isSpeeding) {
-                 isSpeeding = false;
-                 if (display.style.color === 'orange') display.style.color = '';
-                 console.log(`Speed back below limit (${speedLimit} km/h).`);
-             }
+            if (currentSpeedKmH > speedLimit) {
+                if (!isSpeeding) {
+                    // Just started speeding
+                    isSpeeding = true;
+                    display.style.color = 'orange';
+                    speedAlertSound.loop = true; // Enable looping
+                    speedAlertSound.play().catch(e => console.error("Audio play failed:", e));
+                    console.log(`Speed limit (${speedLimit} km/h) exceeded. Starting continuous alert.`);
+                }
+                // Already speeding, sound should continue looping (handled by .loop = true)
+            } else if (currentSpeedKmH <= speedLimit && isSpeeding) {
+                // Speed dropped below limit
+                isSpeeding = false;
+                if (display.style.color === 'orange') display.style.color = '';
+                speedAlertSound.loop = false; // Disable looping
+                speedAlertSound.pause(); // Stop the sound
+                speedAlertSound.currentTime = 0; // Reset sound position
+                console.log(`Speed back below limit (${speedLimit} km/h). Stopping alert.`);
+            }
         } else if (isSpeeding) {
-             isSpeeding = false;
-             if (display.style.color === 'orange') display.style.color = '';
+            // Handle cases where speedLimit becomes invalid or speed drops to 0 while speeding
+            isSpeeding = false;
+            if (display.style.color === 'orange') display.style.color = '';
+            if (speedAlertSound) {
+                speedAlertSound.loop = false;
+                speedAlertSound.pause();
+                speedAlertSound.currentTime = 0;
+                console.log("Speeding stopped due to invalid limit/speed or 0 speed.");
+            }
+        }
+    } else if (isSpeeding) {
+        // Ensure sound stops if a crash is detected while speeding
+        isSpeeding = false; // Update state
+        if (speedAlertSound) {
+            speedAlertSound.loop = false;
+            speedAlertSound.pause();
+            speedAlertSound.currentTime = 0;
+            console.log("Speeding alert stopped due to crash detection.");
         }
     }
 
+    
     if (!crashDetected && currentSpeedMPS !== null) {
         const minSpeedBefore = parseFloat(minSpeedForCrashCheckInput.value);
         const maxSpeedAfter = parseFloat(maxSpeedAfterCrashInput.value);
