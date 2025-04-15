@@ -1,6 +1,6 @@
 #include <Wire.h>
 #include <LiquidCrystal_I2C.h>
-#include <Wifi.h>              // for Wifi
+#include <WiFi.h>              // for WiFi
 #include <HTTPClient.h>        // for HTTP requests
 
 // --- Sensor and LCD setup ---
@@ -15,12 +15,12 @@
 #define I2C_SCL 9
 LiquidCrystal_I2C lcd(0x27, 16, 2);
 
-// --- Wifi Deets ---
+// --- WiFi Deets ---
 const char* ssid = "YOUR_MOBILE_HOTSPOT_NAME";
 const char* password = "YOUR_MOBILE_HOTSPOT_PASSWORD";
 
 // --- Backend Server Deets ---
-String serverUrl = "http://your-render-app-name.onrender.com/api/impact";
+String serverUrl = "https://smart-helmet-backend.onrender.com/api/impact";
 
 // --- State variables ---
 unsigned long lastImpactTime = 0;
@@ -31,35 +31,35 @@ bool impactActive = false;                 // For LCD display timing
 bool currentSensorState[4] = {false, false, false, false}; // [Front, Back, Left, Right]
 bool lastSentSensorState[4] = {false, false, false, false}; // track last state sent to server
 
-// --- Function to connect to Wifi ---
-void setupWifi() {
+// --- Function to connect to WiFi ---
+void setupWiFi() {
     delay(10);
     Serial.println();
     Serial.print("Connecting to ");
     Serial.println(ssid);
     lcd.clear();
     lcd.setCursor(0, 0);
-    lcd.print("Connecting Wifi");
+    lcd.print("Connecting WiFi");
 
-    Wifi.begin(ssid, password);
+    WiFi.begin(ssid, password);
 
-    while (Wifi.status() != WL_CONNECTED) {
+    while (WiFi.status() != WL_CONNECTED) {
         delay(500);
         Serial.print(".");
     }
 
-    if (Wifi.status() == WL_CONNECTED) {
+    if (WiFi.status() == WL_CONNECTED) {
         Serial.println("");
-        Serial.println("Wifi connected");
+        Serial.println("WiFi connected");
         Serial.print("IP address: ");
-        Serial.println(Wifi.localIP());
+        Serial.println(WiFi.localIP());
         lcd.setCursor(0, 1);
-        lcd.print("Wifi Connected!");
+        lcd.print("WiFi Connected!");
         delay(1000);
     } else {
-        Serial.println("Failed to connect to Wifi");
+        Serial.println("Failed to connect to WiFi");
         lcd.setCursor(0, 1);
-        lcd.print("Wifi Failed!");
+        lcd.print("WiFi Failed!");
         delay(1000);
     }
 }
@@ -76,7 +76,7 @@ bool stateChanged(bool currentState[4], bool lastState[4]) {
 
 // --- Function to send data array to BACKEND SERVER AT RENDER ---
 void sendDataToServer(bool sensorState[4]) {
-    if (Wifi.status() == WL_CONNECTED) {
+    if (WiFi.status() == WL_CONNECTED) {
         HTTPClient http;
 
         // Construct JSON payload as a boolean array string
@@ -109,9 +109,9 @@ void sendDataToServer(bool sensorState[4]) {
         http.end(); // Free resources
 
     } else {
-        Serial.println("Wifi not connected. Cannot send data.");
+        Serial.println("WiFi not connected. Cannot send data.");
         // Attempt to reconnect if not connected during send attempt
-        setupWifi();
+        setupWiFi();
     }
 }
 
@@ -135,7 +135,7 @@ void setup() {
     Serial.println("Helmet System - Initializing...");
     delay(1000);
 
-    setupWifi(); // Connect to Wifi
+    setupWiFi(); // Connect to WiFi
 
     // Initialize sensor states (init to false, since we assume theres no impact)
     for(int i=0; i<4; i++) {
@@ -211,12 +211,12 @@ void loop() {
         impactActive = false;
     }
 
-    // Check Wifi connection everytime the loop happens
+    // Check WiFi connection everytime the loop happens
     // And we attempt reconnect if needed
-    if (Wifi.status() != WL_CONNECTED) {
-        Serial.println("Wifi disconnected. Attempting reconnect...");
-        setupWifi();
-        lastWifiCheck = millis();
+    if (WiFi.status() != WL_CONNECTED) {
+        Serial.println("WiFi disconnected. Attempting reconnect...");
+        setupWiFi();
+        lastWiFiCheck = millis();
     }
 
 

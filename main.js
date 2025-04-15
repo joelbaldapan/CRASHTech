@@ -112,7 +112,7 @@ function startMonitoring() {
         console.log("Monitoring started with watchId:", watchId);
 
         fetchHelmetStatus();
-        helmetStatusIntervalId = setInterval(fetchHelmetStatus, 3000);
+        helmetStatusIntervalId = setInterval(fetchHelmetStatus, 1000);
 
     } else {
         monitoringStatus.textContent = "Error: Geolocation is not available.";
@@ -231,7 +231,7 @@ function handlePositionUpdate(position) {
         }
     }
 
-    
+
     if (!crashDetected && currentSpeedMPS !== null) {
         const minSpeedBefore = parseFloat(minSpeedForCrashCheckInput.value);
         const maxSpeedAfter = parseFloat(maxSpeedAfterCrashInput.value);
@@ -413,7 +413,6 @@ function callBackendForSms(latitude, longitude) {
         }
     });
 }
-
 
 function resetCrashDetectionState() {
     crashDetected = false;
