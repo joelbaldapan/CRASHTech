@@ -35,6 +35,7 @@ let helmetStatusIntervalId = null;
 let decelerationEventTimestamp = 0;
 let impactTimestamp = 0;
 
+const STATUS_INTERVAL = 1000;
 const LOCATION_TIMEOUT = 15000;
 const GEOLOCATION_OPTIONS = {
     enableHighAccuracy: true,
@@ -112,7 +113,7 @@ function startMonitoring() {
         console.log("Monitoring started with watchId:", watchId);
 
         fetchHelmetStatus();
-        helmetStatusIntervalId = setInterval(fetchHelmetStatus, 1000);
+        helmetStatusIntervalId = setInterval(fetchHelmetStatus, STATUS_INTERVAL);
 
     } else {
         monitoringStatus.textContent = "Error: Geolocation is not available.";
@@ -344,9 +345,9 @@ function callBackendForSms(latitude, longitude) {
     const dateOptions = { timeZone: 'Asia/Manila', year: 'numeric', month: 'long', day: 'numeric' };
     const timeOptions = { timeZone: 'Asia/Manila', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true };
     const currentDateTime = `${now.toLocaleDateString('en-US', dateOptions)} at ${now.toLocaleTimeString('en-US', timeOptions)} (Philippine Time)`;
-    let messageBody = `-- ALERT: Automatic Crash Detection Alert from ${userName}'s phone. Potential crash detected! ${currentDateTime} at ${locationText}. Please contact emergency services or check on them immediately. --`;
+    let messageBody = `ALERT: Automatic Crash Detection Alert from ${userName}'s phone. Potential crash detected! ${currentDateTime} at ${locationText}. Please contact emergency services or check on them immediately.`;
     if (googleMapsUrl) {
-        messageBody += `\n-x- LOCATION: ${googleMapsUrl} -x-`;
+        messageBody += `\n\nLOCATION: ${googleMapsUrl} -x-`;
     }
 
     console.log(`Sending SMS data to Backend API: ${smsEndpointUrl}`);
