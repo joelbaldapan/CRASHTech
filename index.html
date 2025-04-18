@@ -5,12 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests">
     <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400..900&family=Outfit:wght@400;700&display=swap" rel="stylesheet">
     <script type="module" src="main.js" defer></script>
-    <title>Speed & Crash Detector Prototype</title>
+    <title>CRASHTech - Speed & Crash Detector</title>
 </head>
 <body>
-    <h1>[PROTOTYE] SPEED & CRASH DETECTOR</h1>
-    <h2>Using Render Backend for ESP32 & PhilSMS (Speed Detection: GPS | Impact Detection: Piezoelectric Sensors)</h2>
+    <h1>CRASHTech</h1>
+    <h2 class="subtitle">ESP32-Based Smart Helmet with Piezoelectric Shock Tap Sensors: Enhanced Motorcycle Safety and Emergency Assistance System via Geolocation API and PhilSMS</h2>
 
     <div class="settings">
         <h2>Settings</h2>
@@ -24,7 +25,7 @@
 
         <label for="speedLimit">Speed Limit Alert (km/h):</label>
         <input type="number" id="speedLimit" value="60" min="1" step="5"><br>
-        <small>Plays SYNNOVE WARNING!! When speed exceeds this limit.</small><br>
+        <small>Plays warning alert when speed exceeds this limit.</small><br>
 
         <hr class="thin-hr">
 
@@ -65,17 +66,19 @@
         <p id="helmetStatusDisplay">Helmet Status: Unknown</p>
     </div>
 
-     <div id="crashAlertInfo" style="display: none;">
+     <div id="crashAlertInfo" class="crash-alert" style="display: none;">
         <h2>CRASH DETECTED!</h2> <p>Attempting to prepare emergency message...</p>
         <p id="crashLocation">Fetching location...</p>
         <p><a id="smsLink" href="#" style="display: none;">Manual SMS Fallback</a></p>
          <button id="resetCrashBtn">Reset Alert</button>
     </div>
 
-    <hr> <div class="test-controls">
+    <hr>
+    <div class="test-controls">
         <h2>Testing Tools</h2>
         <button id="testSmsBtn">Test Send SMS Alert</button>
-        <p><small>Uses current saved settings (Name, Recipients, Backend URL) and attempts to get current location to send a test alert via the backend API's /api/send-philsms endpoint.</small></p> </div>
+        <p><small>Uses current saved settings (Name, Recipients, Backend URL) and attempts to get current location to send a test alert via the backend API's /api/send-philsms endpoint.</small></p>
+    </div>
     <div class="log-container">
         <h2>Speed Log</h2>
         <ul id="speedLog"></ul>

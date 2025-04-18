@@ -517,7 +517,7 @@ function handleTestSmsClick() {
     if (testSmsBtn) testSmsBtn.disabled = true;
     console.log("Test SMS button clicked.");
     monitoringStatus.textContent = "Status: Initiating TEST SMS send...";
-    monitoringStatus.style.color = "blue";
+    monitoringStatus.style.color = 'var(--accent-orange)';
 
     const backendUrl = backendApiUrlInput.value.trim();
     const phoneNumbers = getCleanedPhoneNumbers();

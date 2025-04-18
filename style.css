@@ -1,49 +1,103 @@
+/* Variables for theme colors */
+:root {
+    --primary-black: #1a1a1a;
+    --secondary-black: #2a2a2a;
+    --accent-orange: #ff8c00; /* vibrant orange */
+    --accent-orange-dark: #e67e00; /* Darker orange for hover */
+    --text-white: #ffffff;
+    --text-grey: #cccccc;
+    --border-grey: #444;
+    --shadow-dark: rgba(0, 0, 0, 0.3);
+    --alert-red: #e74c3c;
+    --alert-red-dark: #c0392b;
+    --success-green: #2ecc71;
+    --success-green-dark: #27ae60;
+    --info-blue: #3498db;
+    --info-blue-dark: #2980b9;
+    --warning-orange: #f39c12;
+    --warning-orange-dark: #e67e22;
+}
+
+
 /* Basic Reset & Body */
 body {
-    font-family: 'Space Mono', monospace; /* Changed font */
+    font-family: 'Outfit', sans-serif; 
     padding: 15px;
-    background-color: #f4f7f6;
+    background-color: var(--primary-black);
     line-height: 1.6;
-    color: #333;
-    margin: 0; /* Ensure no default margin */
-    -webkit-tap-highlight-color: transparent; /* Remove tap highlight on mobile */
+    color: var(--text-white);
+    margin: 0;
+    -webkit-tap-highlight-color: transparent;
 }
 
 /* Headings */
 h1, h2 {
-    color: #2c3e50;
+    color: var(--accent-orange); /* Orange headings */
     margin-bottom: 0.8em;
+    font-family: 'Orbitron', sans-serif; /* Modern techy font for headings */
 }
 h1 {
-    font-size: 1.8em;
+    font-size: 5em; /* Slightly larger H1 */
     text-align: center;
-    margin-bottom: 0.5em;
+    margin-top: 0.2em;
+    margin-bottom: 0.2em;
+    text-shadow: 0 0 5px var(--accent-orange); /* Subtle glow */
 }
 h2 {
-   font-size: 1.3em;
-   border-bottom: 1px solid #e0e0e0;
-   padding-bottom: 5px;
-   margin-top: 1.5em; /* Add space above H2 */
+   font-size: 2.5em; /* Slightly larger H2 */
+   border-bottom: 1px solid var(--border-grey); /* Grey border */
+   padding-bottom: 8px; /* Increased padding */
+   margin-top: 0.4em; /* More space above H2 */
+   color: var(--text-white); /* H2 text is white */
+}
+.subtitle {
+    text-align: center;
+    font-size: 0.9em;
+    color: var(--text-grey); /* Grey subtitle text */
+    margin-top: -0.5em;
+    margin-bottom: 1.5em;
 }
 
 /* Container Blocks */
-.settings, .controls, .log-container, #crashAlertInfo, .test-controls { /* Added .test-controls */
-    background-color: #ffffff;
-    padding: 15px 20px;
-    margin-bottom: 20px;
-    border-radius: 8px;
-    box-shadow: 0 3px 6px rgba(0,0,0,0.08);
-    border: 1px solid #e0e0e0;
+.settings, .controls, .log-container, .crash-alert, .test-controls {
+    background-color: var(--secondary-black); /* Darker black background */
+    padding: 20px 25px; /* More padding */
+    margin-bottom: 25px; /* More margin */
+    border-radius: 10px; /* More rounded corners */
+    box-shadow: 0 5px 15px var(--shadow-dark); /* Darker shadow */
+    border: 1px solid var(--border-grey); /* Grey border */
 }
+.crash-alert {
+    background-color: #4a2a2a; /* Dark red background for alert */
+    border-color: var(--alert-red);
+    color: var(--text-white); /* White text on alert */
+}
+.crash-alert h2 {
+    color: var(--alert-red); /* Red heading in alert */
+    border-bottom: none;
+    margin-top: 0;
+}
+.crash-alert a#smsLink {
+    background-color: var(--alert-red); /* Red button */
+    border: 1px solid var(--alert-red-dark);
+    color: var(--text-white);
+}
+.crash-alert a#smsLink:hover {
+    background-color: var(--alert-red-dark);
+}
+.crash-alert #crashLocation a {
+    color: var(--info-blue); /* Blue link for map */
+}
+
 
 /* Form Elements */
 label {
     display: block;
-    margin-bottom: 5px;
-    margin-top: 12px;
-    font-weight: 600;
-    font-size: 0.95em;
-    color: #555;
+    margin-bottom: 6px; /* Slightly more space */
+    margin-top: 15px; /* More space above label */
+    font-weight: 700; /* Bolder weight */
+    font-size: 1em; /* Standard size */
+    color: var(--text-grey); /* Grey label text */
 }
 
 input[type="text"],
@@ -51,18 +105,20 @@ input[type="number"],
 input[type="url"],
 input[type="password"]
 {
-    width: 100%; /* Full width */
-    padding: 10px 12px;
-    margin-bottom: 5px;
-    border: 1px solid #ccc;
+    width: 100%;
+    padding: 12px 15px; /* More padding */
+    margin-bottom: 8px; /* More margin */
+    border: 1px solid var(--border-grey); /* Grey border */
     border-radius: 5px;
-    box-sizing: border-box; /* Include padding/border in width */
-    font-size: 16px; /* Explicit font size for mobile */
-    font-family: inherit; /* Ensure inputs use the body font */
-    -webkit-appearance: none; /* Remove default mobile styling */
+    box-sizing: border-box;
+    font-size: 1rem; /* Using rem for better scaling */
+    font-family: inherit;
+    -webkit-appearance: none;
     -moz-appearance: none;
     appearance: none;
-    line-height: normal; /* Explicit line height */
+    line-height: normal;
+    background-color: var(--primary-black); /* Black input background */
+    color: var(--text-white); /* White input text */
 }
 
 /* Specific rule for number input appearance */
@@ -78,177 +134,149 @@ input[type=number]::-webkit-outer-spin-button {
 
 small {
     display: block;
-    margin-top: 3px;
-    margin-bottom: 10px;
-    color: #667788;
-    font-size: 0.85em;
-    line-height: 1.4;
+    margin-top: 4px; /* Slightly more space */
+    margin-bottom: 12px; /* Slightly more space */
+    color: var(--text-grey); /* Grey small text */
+    font-size: 0.8em; /* Slightly smaller */
+    line-height: 1.5;
 }
 
 /* Buttons */
 button {
-    padding: 12px 18px;
-    margin: 10px 5px 5px 0;
-    background-color: #3498db;
-    color: white;
+    padding: 12px 20px; /* More padding */
+    margin: 15px 8px 5px 0; /* Adjusted margins */
+    background-color: var(--info-blue); /* Blue button */
+    color: var(--text-white);
     border: none;
     border-radius: 5px;
     cursor: pointer;
     font-size: 1em;
-    font-weight: 500;
-    transition: background-color 0.2s ease;
+    font-weight: 700; /* Bolder */
+    transition: background-color 0.3s ease, opacity 0.3s ease; /* Added opacity transition */
     -webkit-appearance: none;
     -moz-appearance: none;
     appearance: none;
-    font-family: inherit; /* Ensure buttons use the body font */
+    font-family: inherit;
 }
 button:hover:not(:disabled) {
-    background-color: #2980b9;
+    background-color: var(--info-blue-dark);
 }
 button:disabled {
-    background-color: #bdc3c7;
+    background-color: var(--secondary-black); /* Darker black when disabled */
+    color: var(--border-grey); /* Grey text when disabled */
     cursor: not-allowed;
-    opacity: 0.7;
+    opacity: 0.6; /* Slightly transparent */
 }
 
 button#saveSettingsBtn {
-    background-color: #2ecc71;
+    background-color: var(--success-green); /* Green button */
 }
 button#saveSettingsBtn:hover:not(:disabled) {
-    background-color: #27ae60;
+    background-color: var(--success-green-dark);
 }
 
 button#stopBtn {
-    background-color: #e74c3c;
+    background-color: var(--alert-red); /* Red button */
 }
 button#stopBtn:hover:not(:disabled) {
-    background-color: #c0392b;
+    background-color: var(--alert-red-dark);
 }
 
 #resetCrashBtn {
-    background-color: #f39c12;
-    color: white;
+    background-color: var(--warning-orange); /* Orange button */
+    color: var(--text-white);
 }
 #resetCrashBtn:hover:not(:disabled) {
-    background-color: #e67e22;
+    background-color: var(--warning-orange-dark);
+}
+
+button#testSmsBtn {
+     background-color: var(--accent-orange); /* Orange button for test */
+     margin-top: 10px;
+}
+button#testSmsBtn:hover:not(:disabled) {
+     background-color: var(--accent-orange-dark);
 }
 
 
 /* Status & Display Paragraphs */
-#monitoringStatus, #display {
+#monitoringStatus, #display, #helmetStatusDisplay {
     font-weight: bold;
     margin-top: 15px;
     font-size: 1.15em;
-    padding: 8px;
-    border-radius: 4px;
-    background-color: #ecf0f1;
-    display: inline-block; /* Prevent full width */
-    word-wrap: break-word; /* Wrap long status messages */
-    transition: background-color 0.3s ease, color 0.3s ease; /* Add transition */
+    padding: 10px 12px; /* Increased padding */
+    border-radius: 5px; /* Match input border-radius */
+    background-color: var(--primary-black); /* Black background */
+    color: var(--text-white); /* White text */
+    display: block; /* Make them block elements for better spacing */
+    margin-bottom: 10px; /* Space below each status/display */
+    word-wrap: break-word;
+    transition: background-color 0.3s ease, color 0.3s ease;
+    border: 1px solid var(--border-grey); /* Subtle border */
 }
 #settingsStatus {
-    margin-top: 10px;
+    margin-top: 12px; /* Slightly more margin */
     font-weight: bold;
-    padding: 5px 0;
+    padding: 8px 0; /* More padding */
+    font-size: 0.95em;
 }
 #settingsStatus[style*="color: green"]{
-     color: #27ae60 !important;
+     /* Retain inline style color for success */
 }
 #settingsStatus[style*="color: red"]{
-     color: #c0392b !important;
+     /* Retain inline style color for error */
 }
 
 /* Speed Display States */
 #display[style*="color: orange"] {
-    color: #e67e22 !important;
-    font-weight: bold;
-    background-color: #fdf3e1 !important; /* Use important if needed */
+    color: var(--accent-orange) !important;
+    background-color: var(--primary-black) !important; /* Keep background black */
+    text-shadow: 0 0 3px var(--accent-orange); /* Subtle glow */
 }
 #display[style*="color: red"] {
-    color: #c0392b !important;
-    font-weight: bold;
-    background-color: #fbe6e4 !important; /* Use important if needed */
+    color: var(--alert-red) !important;
+    background-color: var(--primary-black) !important; /* Keep background black */
+    text-shadow: 0 0 3px var(--alert-red); /* Subtle glow */
     animation: blinker 1s linear infinite;
 }
 /* Style for deceleration indication */
 #display[style*="background-color: rgb(255, 221, 221)"] /* #fdd */ {
-     background-color: #fdd !important; /* Light pink */
-     /* Keep default text color unless speeding/crashed */
+     background-color: #3a3030 !important; /* Darker reddish background */
+     color: var(--text-white) !important;
 }
 
 
 /* Blinker Animation */
 @keyframes blinker {
-  50% { opacity: 0.5; }
-}
-
-/* Crash Alert Area */
-#crashAlertInfo {
-    display: none; /* Hidden by default */
-    color: #a94442;
-    background-color: #f2dede;
-    border: 1px solid #ebccd1;
-    padding: 15px 20px;
-    margin-top: 20px;
-}
-#crashAlertInfo h2 {
-    color: #a94442;
-    margin-top: 0;
-    border-bottom: none; /* Remove heading border inside alert */
-}
-#crashAlertInfo p {
-    margin-bottom: 10px;
-    word-wrap: break-word; /* Wrap long messages/locations */
-}
-#crashAlertInfo a#smsLink { /* Style the SMS link (if used as fallback) */
-    display: inline-block;
-    margin-top: 15px;
-    padding: 12px 20px;
-    background-color: #d9534f;
-    color: white;
-    text-decoration: none;
-    border-radius: 5px;
-    font-weight: bold;
-    text-align: center;
-    cursor: pointer;
-    border: 1px solid #d43f3a;
-    transition: background-color 0.2s ease;
-}
-#crashAlertInfo a#smsLink:hover {
-    background-color: #c9302c;
-}
-/* Style for the map link inside the crash alert */
-#crashLocation a {
-    color: #337ab7;
-    text-decoration: underline;
+  50% { opacity: 0.7; } /* Less aggressive blink */
 }
 
 /* Horizontal Rules */
 hr {
-    margin: 25px 0;
+    margin: 30px 0; /* More vertical space */
     border: 0;
-    border-top: 1px solid #dcdcdc;
+    border-top: 1px solid var(--border-grey); /* Grey rule */
 }
-hr.thin-hr { /* Specific thin rule */
-    margin: 15px 0;
-    border-top: 1px solid #eee;
+hr.thin-hr {
+    margin: 20px 0;
+    border-top: 1px solid #3a3a3a; /* Lighter grey rule */
 }
 
 /* Speed Log Styling */
 .log-container {
-    margin-top: 20px;
-    padding: 15px;
-    background-color: #fff;
-    border-radius: 5px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.08);
-    border: 1px solid #e0e0e0;
+    margin-top: 25px;
+    padding: 15px 20px; /* More padding */
+    background-color: var(--secondary-black); /* Darker black */
+    border-radius: 10px;
+    box-shadow: 0 5px 15px var(--shadow-dark);
+    border: 1px solid var(--border-grey);
 }
 
 .log-container h2 {
-   border-bottom: none; /* Remove border for log heading */
-   margin-bottom: 10px;
-   font-size: 1.2em;
-   color: #333;
+   border-bottom: none;
+   margin-bottom: 15px; /* More space below heading */
+   font-size: 1.3em; /* Slightly larger */
+   color: var(--text-white);
 }
 
 #speedLog {
@@ -256,58 +284,46 @@ hr.thin-hr { /* Specific thin rule */
     padding: 0;
     margin: 0;
 
-    max-height: 2000px; /* Limit height and enable scrolling */
-
-    overflow-y: auto; /* Add scrollbar when content exceeds max-height */
-    border: 1px solid #e0e0e0;
-    border-radius: 5px; /* Match container */
-    background-color: #fdfdfd;
+    max-height: 300px; /* Increased height */
+    overflow-y: auto;
+    border: 1px solid var(--border-grey); /* Grey border */
+    border-radius: 5px;
+    background-color: var(--primary-black); /* Black background */
 }
 #speedLog li {
-    padding: 8px 12px;
-    border-bottom: 1px solid #f0f0f0;
+    padding: 10px 12px; /* More padding */
+    border-bottom: 1px solid #2a2a2a; /* Darker border */
     font-size: 0.9em;
-    color: #555;
-    font-family: "Menlo", "Monaco", "Consolas", "Courier New", monospace; /* Monospace font */
-    white-space: nowrap; /* Prevent wrapping */
-    overflow: hidden; /* Hide overflow */
-    text-overflow: ellipsis; /* Add ellipsis if text too long */
+    color: var(--text-grey); /* Grey log text */
+    font-family: "Menlo", "Monaco", "Consolas", "Courier New", monospace;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 #speedLog li:last-child {
-    border-bottom: none; /* Remove border from the last item */
+    border-bottom: none;
 }
 #speedLog li:nth-child(even) {
-    background-color: #f8f8f8;
+    background-color: #1f1f1f; /* Slightly lighter black for stripe */
 }
 
 /* Helmet Status Display Styling */
 #helmetStatusDisplay {
-    font-weight: bold;
-    margin-top: 5px; /* Reduced margin slightly */
-    font-size: 1.1em;
-    padding: 8px;
-    border-radius: 4px;
-    background-color: #ecf0f1;
-    display: inline-block;
-    word-wrap: break-word;
-    transition: background-color 0.3s ease, color 0.3s ease; /* Add transition */
-    /* Default text color */
-    color: #333;
+    /* Inherits styles from #monitoringStatus, #display */
 }
 
 /* Style for when impact is detected */
 #helmetStatusDisplay[style*="background-color: rgb(221, 221, 255)"] /* #ddf */ {
-    background-color: #ddf !important; /* Light blue */
+    background-color: #30304a !important; /* Darker blue background */
      /* Keep default text color */
 }
 /* Style for errors or invalid data */
 #helmetStatusDisplay[style*="color: red"] {
-    color: #c0392b !important;
-    font-weight: bold;
-    background-color: #fbe6e4 !important; /* Match crash text background */
+    color: var(--alert-red) !important;
+    background-color: var(--primary-black) !important; /* Keep background black */
 }
-/* Style for when URL not set */
+/* Style for when URL not set or info */
 #helmetStatusDisplay[style*="color: grey"] {
-    color: #7f8c8d !important; /* Grey color */
-    background-color: #ecf0f1 !important; /* Keep default background */
+    color: var(--text-grey) !important; /* Grey color */
+    background-color: var(--primary-black) !important; /* Keep default background */
 }
