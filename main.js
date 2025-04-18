@@ -131,6 +131,14 @@ function stopMonitoring() {
         helmetStatusDisplay.style.color = '';
     }
 
+    // Stop speed alert sound
+    if (speedAlertSound) {
+        speedAlertSound.loop = false; 
+        speedAlertSound.pause();    
+        speedAlertSound.currentTime = 0;
+        console.log("Speed alert sound stopped.");
+    }
+    
     watchId = null; isMonitoring = false; isSpeeding = false;
     startBtn.disabled = false; stopBtn.disabled = true;
     monitoringStatus.textContent = "Status: Idle";
