@@ -37,7 +37,7 @@ h1, h2 {
     font-family: 'Orbitron', sans-serif; /* Modern techy font for headings */
 }
 h1 {
-    font-size: 5em; /* Slightly larger H1 */
+    font-size: min(80vw, 5em); /* Slightly larger H1 */
     text-align: center;
     margin-top: 0.2em;
     margin-bottom: 0.2em;
