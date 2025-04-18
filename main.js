@@ -1,5 +1,3 @@
-// main.js - COMPLETE CODE
-
 const startBtn = document.getElementById("startBtn");
 const stopBtn = document.getElementById("stopBtn");
 const monitoringStatus = document.getElementById("monitoringStatus");
@@ -9,8 +7,6 @@ const speedLog = document.getElementById("speedLog");
 const userNameInput = document.getElementById("userName");
 const phoneNumbersInput = document.getElementById("phoneNumbers");
 const speedLimitInput = document.getElementById("speedLimit");
-const minSpeedForCrashCheckInput = document.getElementById("minSpeedForCrashCheck");
-const maxSpeedAfterCrashInput = document.getElementById("maxSpeedAfterCrash");
 const minDecelerationForCrashInput = document.getElementById("minDecelerationForCrash");
 const crashTimeoutInput = document.getElementById("crashTimeoutInput");
 const saveSettingsBtn = document.getElementById("saveSettingsBtn");
@@ -65,18 +61,17 @@ function startMonitoring() {
     const backendUrl = backendApiUrlInput.value.trim();
 
     if (!userNameInput.value || !phoneNumbersInput.value || !speedLimitInput.value ||
-        !minSpeedForCrashCheckInput.value || !maxSpeedAfterCrashInput.value || !minDecelerationForCrashInput.value ||
-        !crashTimeoutInput.value || !backendUrl ) {
+        !minDecelerationForCrashInput.value || !crashTimeoutInput.value || !backendUrl ) {
         monitoringStatus.textContent = "Error: Please fill in ALL settings fields, including Crash Detection and Backend URL.";
         settingsStatus.textContent = "Save ALL settings before starting.";
         settingsStatus.style.color = "red";
         return;
     }
     try { new URL(backendUrl); } catch (_) {
-         monitoringStatus.textContent = "Error: Invalid format for Backend API URL.";
-         settingsStatus.textContent = "Check Backend API URL.";
-         settingsStatus.style.color = "red";
-         return;
+          monitoringStatus.textContent = "Error: Invalid format for Backend API URL.";
+          settingsStatus.textContent = "Check Backend API URL.";
+          settingsStatus.style.color = "red";
+          return;
     }
     if (isNaN(parseFloat(crashTimeoutInput.value)) || parseFloat(crashTimeoutInput.value) <= 0) {
         monitoringStatus.textContent = "Error: Crash Timeout must be a positive number.";
@@ -133,12 +128,12 @@ function stopMonitoring() {
 
     // Stop speed alert sound
     if (speedAlertSound) {
-        speedAlertSound.loop = false; 
-        speedAlertSound.pause();    
+        speedAlertSound.loop = false;
+        speedAlertSound.pause();
         speedAlertSound.currentTime = 0;
         console.log("Speed alert sound stopped.");
     }
-    
+
     watchId = null; isMonitoring = false; isSpeeding = false;
     startBtn.disabled = false; stopBtn.disabled = true;
     monitoringStatus.textContent = "Status: Idle";
@@ -174,7 +169,7 @@ function handlePositionUpdate(position) {
     display.textContent = speedText;
 
     if (!crashDetected && display.style.backgroundColor === 'rgb(255, 221, 221)') {
-         display.style.backgroundColor = '';
+          display.style.backgroundColor = '';
     }
 
     if (speedLog) {
@@ -241,27 +236,29 @@ function handlePositionUpdate(position) {
     }
 
 
-    if (!crashDetected && currentSpeedMPS !== null) {
-        const minSpeedBefore = parseFloat(minSpeedForCrashCheckInput.value);
-        const maxSpeedAfter = parseFloat(maxSpeedAfterCrashInput.value);
+    if (!crashDetected && currentSpeedMPS !== null && previousSpeedKmH !== null) { // Ensure previousSpeedKmH is valid
         const minDecel = parseFloat(minDecelerationForCrashInput.value);
         const actualDeceleration = previousSpeedKmH - currentSpeedKmH;
 
-        if ( previousSpeedKmH > minSpeedBefore &&
-             currentSpeedKmH < maxSpeedAfter &&
-             actualDeceleration >= minDecel )
+        // Check only for significant deceleration
+        if (actualDeceleration >= minDecel)
         {
             console.log(`Significant Deceleration Event: Speed drop ${previousSpeedKmH.toFixed(1)} -> ${currentSpeedKmH.toFixed(1)} (Decel: ${actualDeceleration.toFixed(1)} km/h)`);
             display.style.backgroundColor = '#fdd';
             decelerationEventTimestamp = Date.now();
-            checkCrashConditions();
+            checkCrashConditions(); // Now checks if impact occurred within timeout
         }
     }
 
-    if (currentSpeedMPS !== null) {
+    // Only update previousSpeedKmH if current speed is valid
+    if (currentSpeedMPS !== null && currentSpeedMPS >= 0) {
        previousSpeedKmH = currentSpeedKmH;
+    } else if (currentSpeedMPS === null) {
+        // If speed becomes unavailable, reset previous speed to avoid large negative differences
+        previousSpeedKmH = 0;
     }
 }
+
 
 function handleGeolocationError(error) {
     monitoringStatus.textContent = `Status: Geolocation Error (${error.code}: ${error.message})`;
@@ -296,12 +293,12 @@ function triggerCrashAlert() {
         (position) => {
             const { latitude, longitude } = position.coords;
             callBackendForSms(latitude, longitude);
-         },
+          },
         (error) => {
             crashLocationDisplay.textContent = `Location: Error fetching location (${error.message})`;
             console.error("Geolocation error on crash:", error);
             callBackendForSms(null, null);
-         },
+          },
         { enableHighAccuracy: true, timeout: LOCATION_TIMEOUT, maximumAge: 0 }
     );
 }
@@ -331,7 +328,7 @@ function callBackendForSms(latitude, longitude) {
 
     if (phoneNumbers.length === 0) {
         crashLocationDisplay.textContent = (latitude !== null ? `Location: Lat: ${latitude.toFixed(5)}, Lon: ${longitude.toFixed(5)}` : 'Location: Unknown') +
-                                            "\nError: No emergency contacts saved to notify.";
+                                                "\nError: No emergency contacts saved to notify.";
         monitoringStatus.textContent = "Status: CRASH DETECTED! No contacts to alert.";
         console.error("Cannot send SMS via Backend: No valid phone numbers saved.");
         if (testSmsBtn && testSmsBtn.disabled) testSmsBtn.disabled = false;
@@ -404,10 +401,10 @@ function callBackendForSms(latitude, longitude) {
               const successText = `\nServer confirmation: ${data.message || 'Alert request processed.'}`;
               crashLocationDisplay.appendChild(document.createTextNode(successText));
         }
-         else {
-             console.warn('Received unexpected success response format from Backend API:', data);
-             throw new Error('Received unexpected success response format from Backend API.');
-         }
+          else {
+              console.warn('Received unexpected success response format from Backend API:', data);
+              throw new Error('Received unexpected success response format from Backend API.');
+          }
     })
     .catch(error => {
         console.error('Error calling Backend API:', error);
@@ -452,13 +449,15 @@ function resetCrashAlert() {
 function saveSettings() {
     const userName = userNameInput.value.trim();
     const phoneNumbersRaw = phoneNumbersInput.value.trim();
-    const speedLimit = speedLimitInput.value; const minSpeed = minSpeedForCrashCheckInput.value;
-    const maxSpeed = maxSpeedAfterCrashInput.value;
+    const speedLimit = speedLimitInput.value;
+    // Removed: const minSpeed = minSpeedForCrashCheckInput.value;
+    // Removed: const maxSpeed = maxSpeedAfterCrashInput.value;
     const minDecel = minDecelerationForCrashInput.value;
     const crashTimeout = crashTimeoutInput.value;
     const backendUrl = backendApiUrlInput.value.trim();
 
-    if (!userName || !phoneNumbersRaw || !speedLimit || !minSpeed || !maxSpeed || !minDecel || !crashTimeout || !backendUrl) {
+    // Updated validation check
+    if (!userName || !phoneNumbersRaw || !speedLimit || !minDecel || !crashTimeout || !backendUrl) {
         settingsStatus.textContent = "Please fill in ALL required setting fields.";
         settingsStatus.style.color = "red"; setTimeout(() => { settingsStatus.textContent = ""; }, 3000); return;
     }
@@ -466,7 +465,7 @@ function saveSettings() {
     if (phoneNumbersClean.length === 0) {
         settingsStatus.textContent = "No valid PH phone numbers entered."; settingsStatus.style.color = "red"; setTimeout(() => { settingsStatus.textContent = ""; }, 3000);
         return;
-     }
+       }
     try { new URL(backendUrl); } catch (_) {
         settingsStatus.textContent = "Invalid Backend API URL format."; settingsStatus.style.color = "red"; setTimeout(() => { settingsStatus.textContent = ""; }, 3000);
         return;
@@ -480,8 +479,8 @@ function saveSettings() {
     localStorage.setItem(STORAGE_PREFIX + 'userName', userName);
     localStorage.setItem(STORAGE_PREFIX + 'phoneNumbers', phoneNumbersRaw);
     localStorage.setItem(STORAGE_PREFIX + 'speedLimit', speedLimit);
-    localStorage.setItem(STORAGE_PREFIX + 'minSpeed', minSpeed);
-    localStorage.setItem(STORAGE_PREFIX + 'maxSpeed', maxSpeed);
+    // Removed: localStorage.setItem(STORAGE_PREFIX + 'minSpeed', minSpeed);
+    // Removed: localStorage.setItem(STORAGE_PREFIX + 'maxSpeed', maxSpeed);
     localStorage.setItem(STORAGE_PREFIX + 'minDecel', minDecel);
     localStorage.setItem(STORAGE_PREFIX + 'crashTimeout', crashTimeout);
     localStorage.setItem(STORAGE_PREFIX + 'backendUrl', backendUrl);
@@ -495,8 +494,8 @@ function loadSettings() {
     userNameInput.value = localStorage.getItem(STORAGE_PREFIX + 'userName') || '';
     phoneNumbersInput.value = localStorage.getItem(STORAGE_PREFIX + 'phoneNumbers') || '';
     speedLimitInput.value = localStorage.getItem(STORAGE_PREFIX + 'speedLimit') || '60';
-    minSpeedForCrashCheckInput.value = localStorage.getItem(STORAGE_PREFIX + 'minSpeed') || '30';
-    maxSpeedAfterCrashInput.value = localStorage.getItem(STORAGE_PREFIX + 'maxSpeed') || '5';
+    // Removed: minSpeedForCrashCheckInput.value = localStorage.getItem(STORAGE_PREFIX + 'minSpeed') || '30';
+    // Removed: maxSpeedAfterCrashInput.value = localStorage.getItem(STORAGE_PREFIX + 'maxSpeed') || '5';
     minDecelerationForCrashInput.value = localStorage.getItem(STORAGE_PREFIX + 'minDecel') || '25';
     crashTimeoutInput.value = localStorage.getItem(STORAGE_PREFIX + 'crashTimeout') || '2000';
     backendApiUrlInput.value = localStorage.getItem(STORAGE_PREFIX + 'backendUrl') || '';
@@ -522,6 +521,7 @@ function handleTestSmsClick() {
     const backendUrl = backendApiUrlInput.value.trim();
     const phoneNumbers = getCleanedPhoneNumbers();
 
+    // Updated validation check
     if (!backendUrl || !userNameInput.value || phoneNumbers.length === 0) {
         monitoringStatus.textContent = "Status: TEST FAILED (Missing required settings - Backend URL, Name, or Recipients).";
         monitoringStatus.style.color = "red";
@@ -562,8 +562,8 @@ async function fetchHelmetStatus() {
         return;
     }
 
-     // Reset impact background indicator on new fetch if not crashed and not already indicating error
-     if (!crashDetected && helmetStatusDisplay.style.backgroundColor === 'rgb(221, 221, 255)' && helmetStatusDisplay.style.color !== 'red') {
+      // Reset impact background indicator on new fetch if not crashed and not already indicating error
+      if (!crashDetected && helmetStatusDisplay.style.backgroundColor === 'rgb(221, 221, 255)' && helmetStatusDisplay.style.color !== 'red') {
         helmetStatusDisplay.style.backgroundColor = '';
     }
 
@@ -607,7 +607,7 @@ async function fetchHelmetStatus() {
                  if (anyImpact) {
                      console.log("Impact detected on helmet via polling.");
                      impactTimestamp = Date.now();
-                     checkCrashConditions();
+                     checkCrashConditions(); // Now checks if deceleration occurred within timeout
                  }
             }
 
@@ -622,7 +622,7 @@ async function fetchHelmetStatus() {
         console.error('Error fetching helmet status:', error);
         let displayError = error.message;
         if (error instanceof TypeError && error.message.includes('Failed to fetch')) {
-             displayError = 'Network Error fetching helmet status';
+              displayError = 'Network Error fetching helmet status';
         }
         helmetStatusDisplay.textContent = `Helmet Status: Error (${displayError})`;
         helmetStatusDisplay.style.color = 'red';
@@ -636,6 +636,7 @@ function checkCrashConditions() {
     const crashTimeout = parseFloat(crashTimeoutInput.value);
     const now = Date.now();
 
+    // Reset timestamps if they expire independently
     if (decelerationEventTimestamp > 0 && (now - decelerationEventTimestamp > crashTimeout)) {
         console.log("Deceleration event timestamp expired.");
         decelerationEventTimestamp = 0;
@@ -647,6 +648,7 @@ function checkCrashConditions() {
         if (helmetStatusDisplay.style.backgroundColor === 'rgb(221, 221, 255)') { helmetStatusDisplay.style.backgroundColor = ''; }
     }
 
+    // Check if BOTH deceleration and impact events have happened AND are within the timeout window of EACH OTHER
     if (decelerationEventTimestamp > 0 && impactTimestamp > 0) {
         const timeDifference = Math.abs(decelerationEventTimestamp - impactTimestamp);
         console.log(`Checking crash conditions: Decel time=${decelerationEventTimestamp}, Impact time=${impactTimestamp}, Diff=${timeDifference}ms, Timeout=${crashTimeout}ms`);
