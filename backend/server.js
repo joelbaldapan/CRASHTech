@@ -1,34 +1,31 @@
-// server.js (Combined PhilSMS and Helmet Impact Backend)
+// (Combined PhilSMS and Helmet Impact Backend)
 
-require('dotenv').config(); // Load variables from .env file
+require('dotenv').config();
 const express = require('express');
-const fetch = require('node-fetch'); // Use require for node-fetch v2
-const cors = require('cors'); // Import CORS package
+const fetch = require('node-fetch');
+const cors = require('cors');
 
 const app = express();
 const port = process.env.PORT || 3000; // Use Render's PORT or 3000 locally
 
-// --- Middleware ---
-app.use(cors()); // Allows requests from your frontend
-app.use(express.json()); // Parse JSON request bodies
+// Middleware
+app.use(cors()); 
+app.use(express.json());
 
-// --- Get PhilSMS Credentials & Config ---
 const PHIL_SMS_API_TOKEN = process.env.PHIL_SMS_API_TOKEN;
 const PHIL_SMS_SENDER_ID = process.env.PHIL_SMS_SENDER_ID;
 
-// --- Basic Configuration Check ---
 if (!PHIL_SMS_API_TOKEN || !PHIL_SMS_SENDER_ID) {
         console.error("FATAL ERROR: PHIL_SMS_API_TOKEN or PHIL_SMS_SENDER_ID missing in environment variables.");
         process.exit(1);
 }
 
-// --- PhilSMS API Endpoint ---
 const PHIL_SMS_ENDPOINT = 'https://app.philsms.com/api/v3/sms/send';
 
-// --- Helmet Impact State Storage ---
+// Helmet Impact State Storage
 let latestImpactState = [false, false, false, false]; // [F, B, L, R]
 
-// --- API Endpoint the Frontend Calls (PhilSMS) ---
+// API Endpoint the Frontend Calls (PhilSMS)
 app.post('/api/send-philsms', async (req, res) => {
         const timestamp = new Date().toISOString();
         console.log(`[${timestamp}] Received request on /api/send-philsms`);
@@ -99,10 +96,10 @@ app.post('/api/send-philsms', async (req, res) => {
                 console.error(`[${timestamp}] Network or processing error calling PhilSMS:`, error);
                 res.status(500).json({ result: [{ success: false, error: `Backend Error: ${error.message}`, number: recipientString }] });
         }
-}); // <-- End of /api/send-philsms route
+});
 
 
-// --- API Routes for Helmet Impact ---
+// API Routes for Helmet Impact
 
 /**
  * @route     POST /api/impact
@@ -136,12 +133,12 @@ app.get('/api/latest-impact', (req, res) => {
     });
 });
 
-// --- Optional: Basic Root Route ---
+
 app.get('/', (req, res) => {
         res.send('Combined Backend Service (PhilSMS + Helmet Impact) is running!');
 });
 
-// --- Start Server ---
+// Start Server
 app.listen(port, '0.0.0.0', () => {
         console.log(`✅ Combined Backend Service listening on port ${port}`);
         console.log(`     Frontend should call PhilSMS endpoint: /api/send-philsms`);

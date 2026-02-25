@@ -208,9 +208,9 @@ function handlePositionUpdate(position) {
                 // Speed dropped below limit
                 isSpeeding = false;
                 if (display.style.color === 'orange') display.style.color = '';
-                speedAlertSound.loop = false; // Disable looping
-                speedAlertSound.pause(); // Stop the sound
-                speedAlertSound.currentTime = 0; // Reset sound position
+                speedAlertSound.loop = false
+                speedAlertSound.pause();
+                speedAlertSound.currentTime = 0;
                 console.log(`Speed back below limit (${speedLimit} km/h). Stopping alert.`);
             }
         } else if (isSpeeding) {
@@ -225,7 +225,7 @@ function handlePositionUpdate(position) {
             }
         }
     } else if (isSpeeding) {
-        // Ensure sound stops if a crash is detected while speeding
+        // sound stops if a crash is detected while speeding
         isSpeeding = false; // Update state
         if (speedAlertSound) {
             speedAlertSound.loop = false;
@@ -236,7 +236,7 @@ function handlePositionUpdate(position) {
     }
 
 
-    if (!crashDetected && currentSpeedMPS !== null && previousSpeedKmH !== null) { // Ensure previousSpeedKmH is valid
+    if (!crashDetected && currentSpeedMPS !== null && previousSpeedKmH !== null) {
         const minDecel = parseFloat(minDecelerationForCrashInput.value);
         const actualDeceleration = previousSpeedKmH - currentSpeedKmH;
 
@@ -254,7 +254,8 @@ function handlePositionUpdate(position) {
     if (currentSpeedMPS !== null && currentSpeedMPS >= 0) {
        previousSpeedKmH = currentSpeedKmH;
     } else if (currentSpeedMPS === null) {
-        // If speed becomes unavailable, reset previous speed to avoid large negative differences
+        // If speed becomes unavailable,
+        // reset previous speed to avoid large negative differences
         previousSpeedKmH = 0;
     }
 }
@@ -450,8 +451,6 @@ function saveSettings() {
     const userName = userNameInput.value.trim();
     const phoneNumbersRaw = phoneNumbersInput.value.trim();
     const speedLimit = speedLimitInput.value;
-    // Removed: const minSpeed = minSpeedForCrashCheckInput.value;
-    // Removed: const maxSpeed = maxSpeedAfterCrashInput.value;
     const minDecel = minDecelerationForCrashInput.value;
     const crashTimeout = crashTimeoutInput.value;
     const backendUrl = backendApiUrlInput.value.trim();
@@ -479,8 +478,6 @@ function saveSettings() {
     localStorage.setItem(STORAGE_PREFIX + 'userName', userName);
     localStorage.setItem(STORAGE_PREFIX + 'phoneNumbers', phoneNumbersRaw);
     localStorage.setItem(STORAGE_PREFIX + 'speedLimit', speedLimit);
-    // Removed: localStorage.setItem(STORAGE_PREFIX + 'minSpeed', minSpeed);
-    // Removed: localStorage.setItem(STORAGE_PREFIX + 'maxSpeed', maxSpeed);
     localStorage.setItem(STORAGE_PREFIX + 'minDecel', minDecel);
     localStorage.setItem(STORAGE_PREFIX + 'crashTimeout', crashTimeout);
     localStorage.setItem(STORAGE_PREFIX + 'backendUrl', backendUrl);
@@ -494,8 +491,6 @@ function loadSettings() {
     userNameInput.value = localStorage.getItem(STORAGE_PREFIX + 'userName') || '';
     phoneNumbersInput.value = localStorage.getItem(STORAGE_PREFIX + 'phoneNumbers') || '';
     speedLimitInput.value = localStorage.getItem(STORAGE_PREFIX + 'speedLimit') || '60';
-    // Removed: minSpeedForCrashCheckInput.value = localStorage.getItem(STORAGE_PREFIX + 'minSpeed') || '30';
-    // Removed: maxSpeedAfterCrashInput.value = localStorage.getItem(STORAGE_PREFIX + 'maxSpeed') || '5';
     minDecelerationForCrashInput.value = localStorage.getItem(STORAGE_PREFIX + 'minDecel') || '25';
     crashTimeoutInput.value = localStorage.getItem(STORAGE_PREFIX + 'crashTimeout') || '2000';
     backendApiUrlInput.value = localStorage.getItem(STORAGE_PREFIX + 'backendUrl') || '';
@@ -592,7 +587,7 @@ async function fetchHelmetStatus() {
             if (impactLocations.length > 0) {
                 statusText += `Impact (${impactLocations.join(', ')})`;
                 if (!crashDetected) {
-                    helmetStatusDisplay.style.backgroundColor = '#ddf'; // Light blue background
+                    helmetStatusDisplay.style.backgroundColor = '#ddf'; // light blue background
                 }
                 helmetStatusDisplay.style.color = '';
             } else {
@@ -607,7 +602,7 @@ async function fetchHelmetStatus() {
                  if (anyImpact) {
                      console.log("Impact detected on helmet via polling.");
                      impactTimestamp = Date.now();
-                     checkCrashConditions(); // Now checks if deceleration occurred within timeout
+                     checkCrashConditions();
                  }
             }
 
@@ -648,7 +643,8 @@ function checkCrashConditions() {
         if (helmetStatusDisplay.style.backgroundColor === 'rgb(221, 221, 255)') { helmetStatusDisplay.style.backgroundColor = ''; }
     }
 
-    // Check if BOTH deceleration and impact events have happened AND are within the timeout window of EACH OTHER
+    // Check if BOTH deceleration and impact events have happened
+    // AND are within the timeout window of EACH OTHER
     if (decelerationEventTimestamp > 0 && impactTimestamp > 0) {
         const timeDifference = Math.abs(decelerationEventTimestamp - impactTimestamp);
         console.log(`Checking crash conditions: Decel time=${decelerationEventTimestamp}, Impact time=${impactTimestamp}, Diff=${timeDifference}ms, Timeout=${crashTimeout}ms`);

@@ -1,9 +1,9 @@
-/* Variables for theme colors */
+
 :root {
     --primary-black: #1a1a1a;
     --secondary-black: #2a2a2a;
-    --accent-orange: #ff8c00; /* vibrant orange */
-    --accent-orange-dark: #e67e00; /* Darker orange for hover */
+    --accent-orange: #ff8c00;
+    --accent-orange-dark: #e67e00;
     --text-white: #ffffff;
     --text-grey: #cccccc;
     --border-grey: #444;
@@ -32,54 +32,54 @@ body {
 
 /* Headings */
 h1, h2 {
-    color: var(--accent-orange); /* Orange headings */
+    color: var(--accent-orange);
     margin-bottom: 0.8em;
-    font-family: 'Orbitron', sans-serif; /* Modern techy font for headings */
+    font-family: 'Orbitron', sans-serif;
 }
 h1 {
-    font-size: min(20vw, 4em); /* Slightly larger H1 */
+    font-size: min(20vw, 4em);
     text-align: center;
     margin-top: 0.2em;
     margin-bottom: 0.2em;
-    text-shadow: 0 0 5px var(--accent-orange); /* Subtle glow */
+    text-shadow: 0 0 5px var(--accent-orange);
     overflow-wrap: break-word;
 }
 h2 {
-   font-size: 2.5em; /* Slightly larger H2 */
-   border-bottom: 1px solid var(--border-grey); /* Grey border */
-   padding-bottom: 8px; /* Increased padding */
-   margin-top: 0.4em; /* More space above H2 */
-   color: var(--text-white); /* H2 text is white */
+   font-size: 2.5em;
+   border-bottom: 1px solid var(--border-grey);
+   padding-bottom: 8px;
+   margin-top: 0.4em;
+   color: var(--text-white);
 }
 .subtitle {
     text-align: center;
     font-size: 0.9em;
-    color: var(--text-grey); /* Grey subtitle text */
+    color: var(--text-grey);
     margin-top: -0.5em;
     margin-bottom: 1.5em;
 }
 
 /* Container Blocks */
 .settings, .controls, .log-container, .crash-alert, .test-controls {
-    background-color: var(--secondary-black); /* Darker black background */
-    padding: 20px 25px; /* More padding */
-    margin-bottom: 25px; /* More margin */
-    border-radius: 10px; /* More rounded corners */
-    box-shadow: 0 5px 15px var(--shadow-dark); /* Darker shadow */
-    border: 1px solid var(--border-grey); /* Grey border */
+    background-color: var(--secondary-black);
+    padding: 20px 25px;
+    margin-bottom: 25px;
+    border-radius: 10px;
+    box-shadow: 0 5px 15px var(--shadow-dark);
+    border: 1px solid var(--border-grey);
 }
 .crash-alert {
-    background-color: #4a2a2a; /* Dark red background for alert */
+    background-color: #4a2a2a;
     border-color: var(--alert-red);
-    color: var(--text-white); /* White text on alert */
+    color: var(--text-white);
 }
 .crash-alert h2 {
-    color: var(--alert-red); /* Red heading in alert */
+    color: var(--alert-red);
     border-bottom: none;
     margin-top: 0;
 }
 .crash-alert a#smsLink {
-    background-color: var(--alert-red); /* Red button */
+    background-color: var(--alert-red);
     border: 1px solid var(--alert-red-dark);
     color: var(--text-white);
 }
@@ -87,18 +87,18 @@ h2 {
     background-color: var(--alert-red-dark);
 }
 .crash-alert #crashLocation a {
-    color: var(--info-blue); /* Blue link for map */
+    color: var(--info-blue);
 }
 
 
 /* Form Elements */
 label {
     display: block;
-    margin-bottom: 6px; /* Slightly more space */
-    margin-top: 15px; /* More space above label */
-    font-weight: 700; /* Bolder weight */
-    font-size: 1em; /* Standard size */
-    color: var(--text-grey); /* Grey label text */
+    margin-bottom: 6px;
+    margin-top: 15px;
+    font-weight: 700;
+    font-size: 1em;
+    color: var(--text-grey);
 }
 
 input[type="text"],
@@ -107,19 +107,19 @@ input[type="url"],
 input[type="password"]
 {
     width: 100%;
-    padding: 12px 15px; /* More padding */
-    margin-bottom: 8px; /* More margin */
-    border: 1px solid var(--border-grey); /* Grey border */
+    padding: 12px 15px;
+    margin-bottom: 8px;
+    border: 1px solid var(--border-grey);
     border-radius: 5px;
     box-sizing: border-box;
-    font-size: 1rem; /* Using rem for better scaling */
+    font-size: 1rem;
     font-family: inherit;
     -webkit-appearance: none;
     -moz-appearance: none;
     appearance: none;
     line-height: normal;
-    background-color: var(--primary-black); /* Black input background */
-    color: var(--text-white); /* White input text */
+    background-color: var(--primary-black);
+    color: var(--text-white);
 }
 
 /* Specific rule for number input appearance */
@@ -135,25 +135,25 @@ input[type=number]::-webkit-outer-spin-button {
 
 small {
     display: block;
-    margin-top: 4px; /* Slightly more space */
-    margin-bottom: 12px; /* Slightly more space */
-    color: var(--text-grey); /* Grey small text */
-    font-size: 0.8em; /* Slightly smaller */
+    margin-top: 4px;
+    margin-bottom: 12px;
+    color: var(--text-grey);
+    font-size: 0.8em;
     line-height: 1.5;
 }
 
 /* Buttons */
 button {
-    padding: 12px 20px; /* More padding */
-    margin: 15px 8px 5px 0; /* Adjusted margins */
-    background-color: var(--info-blue); /* Blue button */
+    padding: 12px 20px;
+    margin: 15px 8px 5px 0;
+    background-color: var(--info-blue);
     color: var(--text-white);
     border: none;
     border-radius: 5px;
     cursor: pointer;
     font-size: 1em;
-    font-weight: 700; /* Bolder */
-    transition: background-color 0.3s ease, opacity 0.3s ease; /* Added opacity transition */
+    font-weight: 700;
+    transition: background-color 0.3s ease, opacity 0.3s ease;
     -webkit-appearance: none;
     -moz-appearance: none;
     appearance: none;
@@ -163,28 +163,28 @@ button:hover:not(:disabled) {
     background-color: var(--info-blue-dark);
 }
 button:disabled {
-    background-color: var(--secondary-black); /* Darker black when disabled */
-    color: var(--border-grey); /* Grey text when disabled */
+    background-color: var(--secondary-black);
+    color: var(--border-grey);
     cursor: not-allowed;
-    opacity: 0.6; /* Slightly transparent */
+    opacity: 0.6;
 }
 
 button#saveSettingsBtn {
-    background-color: var(--success-green); /* Green button */
+    background-color: var(--success-green);
 }
 button#saveSettingsBtn:hover:not(:disabled) {
     background-color: var(--success-green-dark);
 }
 
 button#stopBtn {
-    background-color: var(--alert-red); /* Red button */
+    background-color: var(--alert-red);
 }
 button#stopBtn:hover:not(:disabled) {
     background-color: var(--alert-red-dark);
 }
 
 #resetCrashBtn {
-    background-color: var(--warning-orange); /* Orange button */
+    background-color: var(--warning-orange);
     color: var(--text-white);
 }
 #resetCrashBtn:hover:not(:disabled) {
@@ -192,7 +192,7 @@ button#stopBtn:hover:not(:disabled) {
 }
 
 button#testSmsBtn {
-     background-color: var(--accent-orange); /* Orange button for test */
+     background-color: var(--accent-orange);
      margin-top: 10px;
 }
 button#testSmsBtn:hover:not(:disabled) {
@@ -205,69 +205,69 @@ button#testSmsBtn:hover:not(:disabled) {
     font-weight: bold;
     margin-top: 15px;
     font-size: 1.15em;
-    padding: 10px 12px; /* Increased padding */
-    border-radius: 5px; /* Match input border-radius */
-    background-color: var(--primary-black); /* Black background */
-    color: var(--text-white); /* White text */
-    display: block; /* Make them block elements for better spacing */
-    margin-bottom: 10px; /* Space below each status/display */
+    padding: 10px 12px;
+    border-radius: 5px;
+    background-color: var(--primary-black);
+    color: var(--text-white);
+    display: block;
+    margin-bottom: 10px;
     word-wrap: break-word;
     transition: background-color 0.3s ease, color 0.3s ease;
-    border: 1px solid var(--border-grey); /* Subtle border */
+    border: 1px solid var(--border-grey);
 }
 #settingsStatus {
-    margin-top: 12px; /* Slightly more margin */
+    margin-top: 12px;
     font-weight: bold;
-    padding: 8px 0; /* More padding */
+    padding: 8px 0;
     font-size: 0.95em;
 }
 #settingsStatus[style*="color: green"]{
-     /* Retain inline style color for success */
+    
 }
 #settingsStatus[style*="color: red"]{
-     /* Retain inline style color for error */
+    
 }
 
 /* Speed Display States */
 #display[style*="color: orange"] {
     color: var(--accent-orange) !important;
-    background-color: var(--primary-black) !important; /* Keep background black */
-    text-shadow: 0 0 3px var(--accent-orange); /* Subtle glow */
+    background-color: var(--primary-black) !important;
+    text-shadow: 0 0 3px var(--accent-orange);
 }
 #display[style*="color: red"] {
     color: var(--alert-red) !important;
-    background-color: var(--primary-black) !important; /* Keep background black */
-    text-shadow: 0 0 3px var(--alert-red); /* Subtle glow */
+    background-color: var(--primary-black) !important;
+    text-shadow: 0 0 3px var(--alert-red);
     animation: blinker 1s linear infinite;
 }
 /* Style for deceleration indication */
-#display[style*="background-color: rgb(255, 221, 221)"] /* #fdd */ {
-     background-color: #3a3030 !important; /* Darker reddish background */
+#display[style*="background-color: rgb(255, 221, 221)"] {
+     background-color: #3a3030 !important;
      color: var(--text-white) !important;
 }
 
 
 /* Blinker Animation */
 @keyframes blinker {
-  50% { opacity: 0.7; } /* Less aggressive blink */
+  50% { opacity: 0.7; }
 }
 
 /* Horizontal Rules */
 hr {
-    margin: 30px 0; /* More vertical space */
+    margin: 30px 0;
     border: 0;
-    border-top: 1px solid var(--border-grey); /* Grey rule */
+    border-top: 1px solid var(--border-grey);
 }
 hr.thin-hr {
     margin: 20px 0;
-    border-top: 1px solid #3a3a3a; /* Lighter grey rule */
+    border-top: 1px solid #3a3a3a;
 }
 
 /* Speed Log Styling */
 .log-container {
     margin-top: 25px;
-    padding: 15px 20px; /* More padding */
-    background-color: var(--secondary-black); /* Darker black */
+    padding: 15px 20px;
+    background-color: var(--secondary-black);
     border-radius: 10px;
     box-shadow: 0 5px 15px var(--shadow-dark);
     border: 1px solid var(--border-grey);
@@ -275,8 +275,8 @@ hr.thin-hr {
 
 .log-container h2 {
    border-bottom: none;
-   margin-bottom: 15px; /* More space below heading */
-   font-size: 1.3em; /* Slightly larger */
+   margin-bottom: 15px;
+   font-size: 1.3em;
    color: var(--text-white);
 }
 
@@ -285,17 +285,17 @@ hr.thin-hr {
     padding: 0;
     margin: 0;
 
-    max-height: 300px; /* Increased height */
+    max-height: 300px;
     overflow-y: auto;
-    border: 1px solid var(--border-grey); /* Grey border */
+    border: 1px solid var(--border-grey);
     border-radius: 5px;
-    background-color: var(--primary-black); /* Black background */
+    background-color: var(--primary-black);
 }
 #speedLog li {
-    padding: 10px 12px; /* More padding */
-    border-bottom: 1px solid #2a2a2a; /* Darker border */
+    padding: 10px 12px;
+    border-bottom: 1px solid #2a2a2a;
     font-size: 0.9em;
-    color: var(--text-grey); /* Grey log text */
+    color: var(--text-grey);
     font-family: "Menlo", "Monaco", "Consolas", "Courier New", monospace;
     white-space: nowrap;
     overflow: hidden;
@@ -305,26 +305,25 @@ hr.thin-hr {
     border-bottom: none;
 }
 #speedLog li:nth-child(even) {
-    background-color: #1f1f1f; /* Slightly lighter black for stripe */
+    background-color: #1f1f1f;
 }
 
-/* Helmet Status Display Styling */
 #helmetStatusDisplay {
-    /* Inherits styles from #monitoringStatus, #display */
+   
 }
 
 /* Style for when impact is detected */
-#helmetStatusDisplay[style*="background-color: rgb(221, 221, 255)"] /* #ddf */ {
-    background-color: #30304a !important; /* Darker blue background */
-     /* Keep default text color */
+#helmetStatusDisplay[style*="background-color: rgb(221, 221, 255)"] {
+    background-color: #30304a !important;
+    
 }
 /* Style for errors or invalid data */
 #helmetStatusDisplay[style*="color: red"] {
     color: var(--alert-red) !important;
-    background-color: var(--primary-black) !important; /* Keep background black */
+    background-color: var(--primary-black) !important;
 }
 /* Style for when URL not set or info */
 #helmetStatusDisplay[style*="color: grey"] {
-    color: var(--text-grey) !important; /* Grey color */
-    background-color: var(--primary-black) !important; /* Keep default background */
+    color: var(--text-grey) !important;
+    background-color: var(--primary-black) !important;
 }

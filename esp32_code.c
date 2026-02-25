@@ -3,7 +3,7 @@
 #include <WiFi.h>              // for WiFi
 #include <HTTPClient.h>        // for HTTP requests
 
-// --- Sensor and LCD setup ---
+// Sensor and LCD setup
 // Sensor pin definitions
 #define SENSOR1 2   // Front
 #define SENSOR2 4   // Back
@@ -15,14 +15,14 @@
 #define I2C_SCL 9
 LiquidCrystal_I2C lcd(0x27, 16, 2);
 
-// --- WiFi Deets ---
+// WiFi Deets
 const char* ssid = "YOUR_MOBILE_HOTSPOT_NAME";
 const char* password = "YOUR_MOBILE_HOTSPOT_PASSWORD";
 
-// --- Backend Server Deets ---
+// Backend Server Deets
 String serverUrl = "https://smart-helmet-backend.onrender.com/api/impact";
 
-// --- State variables ---
+// State variables
 unsigned long lastImpactTime = 0;
 String currentMessage = "No Tap Detected"; // For LCD display
 bool impactActive = false;                 // For LCD display timing
@@ -31,7 +31,7 @@ bool impactActive = false;                 // For LCD display timing
 bool currentSensorState[4] = {false, false, false, false}; // [Front, Back, Left, Right]
 bool lastSentSensorState[4] = {false, false, false, false}; // track last state sent to server
 
-// --- Function to connect to WiFi ---
+// Function to connect to WiFi
 void setupWiFi() {
     delay(10);
     Serial.println();
@@ -64,7 +64,7 @@ void setupWiFi() {
     }
 }
 
-// --- Function to check if sensor state has changed ---
+// Function to check if sensor state has changed
 bool stateChanged(bool currentState[4], bool lastState[4]) {
     for (int i = 0; i < 4; i++) {
         if (currentState[i] != lastState[i]) {
@@ -74,7 +74,7 @@ bool stateChanged(bool currentState[4], bool lastState[4]) {
     return false; // State is the same
 }
 
-// --- Function to send data array to BACKEND SERVER AT RENDER ---
+// Function to send data array to BACKEND SERVER AT RENDER
 void sendDataToServer(bool sensorState[4]) {
     if (WiFi.status() == WL_CONNECTED) {
         HTTPClient http;
@@ -93,7 +93,7 @@ void sendDataToServer(bool sensorState[4]) {
         Serial.print("Sending data array to server: ");
         Serial.println(jsonPayload);
 
-        http.begin(serverUrl); // Specify the URL
+        http.begin(serverUrl);
         http.addHeader("Content-Type", "application/json"); // Specify content type
 
         int httpResponseCode = http.POST(jsonPayload); // Send POST request
@@ -106,7 +106,7 @@ void sendDataToServer(bool sensorState[4]) {
             Serial.println(httpResponseCode);
         }
 
-        http.end(); // Free resources
+        http.end();
 
     } else {
         Serial.println("WiFi not connected. Cannot send data.");
@@ -151,13 +151,13 @@ void setup() {
 }
 
 void loop() {
-    // --- Read all sensors into the current state array ---
+    // Read all sensors into the current state array
     currentSensorState[0] = digitalRead(SENSOR1); // Front
     currentSensorState[1] = digitalRead(SENSOR2); // Back
     currentSensorState[2] = digitalRead(SENSOR3); // Left
     currentSensorState[3] = digitalRead(SENSOR4); // Right
 
-    // --- Check if the sensor state has changed since the last time we sent data ---
+    // Check if the sensor state has changed since the last time we sent data
     if (stateChanged(currentSensorState, lastSentSensorState)) {
         sendDataToServer(currentSensorState); // Send the new state array
         // Update the last sent state *after* sending
@@ -167,7 +167,7 @@ void loop() {
         }
     }
 
-    // --- Determine LCD message based on current sensor state ---
+    // Determine LCD message based on current sensor state
     String newMessage = "";
     bool anySensorTriggered = false;
     if (currentSensorState[0]) {
@@ -186,7 +186,7 @@ void loop() {
 
     unsigned long currentMillis = millis();
 
-    // --- LCD Update Logic ---
+    // LCD Update Logic
     if (anySensorTriggered) {
         // Show impact message immediately and update LCD if it's different
         if (newMessage != currentMessage) {
@@ -220,5 +220,5 @@ void loop() {
     }
 
 
-    delay(50); // Responsive loop
+    delay(50);
 }

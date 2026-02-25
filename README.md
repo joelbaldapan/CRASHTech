@@ -1,6 +1,5 @@
 # CRASHTech - Speed & Crash Detection System
 
-![CRASHTech Logo](https://img.shields.io/badge/ESP32-Smart%20Helmet-orange)  
 ⛑️💥 ESP32-Based Smart Helmet with Piezoelectric Shock Tap Sensors: Enhanced Motorcycle Safety and Emergency Assistance System via Geolocation API and PhilSMS
 
 🎓️ A Capstone Commission Project, for Bohol Wisdom School's Research Fair
@@ -77,7 +76,6 @@ CRASHTech is a speed-tracking and crash-detection system designed for motorcycle
 └── README.md
 ```
 
----
 
 ## Configuration
 
@@ -90,7 +88,3 @@ CRASHTech is a speed-tracking and crash-detection system designed for motorcycle
 2. Start monitoring.
 3. When a crash is detected (sudden deceleration + helmet impact), SMS alerts are sent automatically.
 4. Use the **Test Send SMS Alert** button to verify SMS delivery.
-
-## Credits
-
-- ESP32, Node.js, Express, PhilSMS, Google Maps, and open web APIs.
